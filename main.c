@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "vm.h"
+#include "maquinaVirtual.h"
 
-#define ARCHT = 100
+#define ARCHT 100
 
 /// argv[0] = vmx
 /// argv[1] = programa.vmx

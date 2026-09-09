@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#include "traductor.h"
 
 #define DIMMEMORIA 16384 ///16 KiB = 16384 bits
 #define REGISTROS 32
@@ -65,8 +67,8 @@ typedef struct {
     int dim;
 }ETSegmento;
 typedef struct {
-    char memoria[DIMMEMORIA];
-    int registros[REGISTROS];
+    uint8_t memoria[DIMMEMORIA];
+    int32_t registros[REGISTROS];
     ETSegmento segTabla[SEGMENTOS];
     bool running;
     bool error;
@@ -76,9 +78,12 @@ typedef struct {
 
 void mvInic(ETMaquinaVirtual *maqVirt, bool modoDebug);
 bool cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo);
-void mvEjecutar(ETMaquinaVirtual *maqVirt
+void mvEjecutar(ETMaquinaVirtual *maqVirt);
 void setFlags(ETMaquinaVirtual *maqVirt, bool n, bool z, bool c, bool o);
 void mvError(ETMaquinaVirtual *maqVirt, char *mensaje);
+void ejecutarInstruction(ETMaquinaVirtual *maqVirt,TRInstruction inst);
+void guardarResult(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp, int32_t result);
+bool verificarOverflow(int32_t valA, int32_t valB, int32_t resultado, char op);
 
 
 #endif // MAQUINAVIRTUAL_H_INCLUDED
