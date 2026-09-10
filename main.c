@@ -47,10 +47,19 @@ int main(int argc, char *argv[]) {
     //debo comprobar que esto se de así y guardar la info necesaria.
 */
 
+void procesarHeader(char nombrearchivo[FILENAME_MAX], uint8_t *version,uint16_t *code_size);
+
 int main(int argc, char *argv[])
 {
     char nombreArchivo[FILENAME_MAX];
-    int flagD = 0,version,code_size;
+    int flagD = 0;
+    uint8_t version;
+    uint16_t code_size;
+
+    if (argc < 2) {
+        fprintf(stderr, "Uso: %s filename.vmx [-d]\n", argv[0]);
+        return 1;
+    }
 
     if(argc>=2 && strstr(argv[1],".vmx")){ 
         strcpy(nombreArchivo,argv[1]);
@@ -58,6 +67,8 @@ int main(int argc, char *argv[])
     } 
 
     procesarHeader(nombreArchivo,&version,&code_size); //no se si iría en main
+
+    printf("Version: %u, code_size: %u, flagD=%d\n", version, code_size, flagD);
 
     return 0;
 }
@@ -69,10 +80,10 @@ void procesarHeader(char nombrearchivo[FILENAME_MAX], uint8_t *version,uint16_t 
 
         if((archVMX = fopen(nombrearchivo,"rb"))!=NULL){
                 if(fread(header, 1, 8, archVMX) == 8) {
-                    if(memcmp(header,"VMX26",5)!=0){ /* error, no coincide ident. */}
+                    if(memcmp(header,"VMX26",5)!=0){  printf("error 1");/* error, no coincide ident. */}
 
                     *version=header[5];
-                    if(version!=1){ /* error, version incompatible*/}
+                    if(*version!=1){ printf("error 2");/* error, version incompatible*/}
                     
                     *code_size = (header[6] << 8) | header[7]; // big-endian
                 }
@@ -80,3 +91,8 @@ void procesarHeader(char nombrearchivo[FILENAME_MAX], uint8_t *version,uint16_t 
                 fclose(archVMX);
             }
 }
+
+/*para ejecutar: 
+  primero gcc main.c -o vmx
+  luego  vmx sample.vmx -d
+*/
