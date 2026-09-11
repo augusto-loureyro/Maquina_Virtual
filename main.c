@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h> ///Para la funcion RND
 #include "maquinaVirtual.h"
 
 #define ARCHT 100
@@ -15,9 +16,16 @@ int main(int argc, char *argv[]) {
     char nombreArchivo[ARCHT];
     bool modoDebug = false;
 
-    strcpy(nombreArchivo, argv[1]);
+    /*
+    if (argc < 2) {
+        printf("Error: Se requiere el archivo de entrada.\n");
+        return 1;
+    }*/
 
-    if (strcmp(argv[2],"-d") == 0)
+    ///strcpy(nombreArchivo, argv[1]);
+    strcpy(nombreArchivo, "vmt.vmx");
+
+    if (argc > 2 && strcmp(argv[2],"-d") == 0)
         modoDebug = true;
 
     mvInic(&maqVirt, modoDebug);

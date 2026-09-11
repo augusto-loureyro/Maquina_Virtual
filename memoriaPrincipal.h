@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include "maquinaVirtual.h"
 
-/// Traducción de dirección lógica a física. Retorna -1 si hay error (Fallo de segmento).
+/// Traduccion de direccion logica a fisica. Retorna -1 si hay error (Fallo de segmento).
 int32_t cambioLogicFisic(ETMaquinaVirtual *maqVirt, int32_t dirLogica);
 uint8_t siguienteByte(ETMaquinaVirtual *maqVirt, int32_t *dirLogica);
 

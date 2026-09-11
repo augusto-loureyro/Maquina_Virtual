@@ -1,4 +1,5 @@
 #include "traductor.h"
+#include "memoriaPrincipal.h"
 
 
 TRInstruction leerInstruccion(ETMaquinaVirtual *maqVirt, int32_t *dirFisica) {
@@ -79,8 +80,8 @@ int32_t operandoDest(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp,
     } else if (tipoOp == OPMEM) {
         *memoriaP = 1;
         desplaz = (short)(valorOp >> 8);
-        registro = operando & 0x1F;
-        dirLogica = maqVirt->registros[registro]; /// DS
+        registro = valorOp & 0x1F;
+        int32_t dirLogica = maqVirt->registros[registro]; /// DS
         return dirLogica + desplaz;
     }
     *memoriaP = 0;
@@ -107,4 +108,8 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int32_t tipoLlamada) {
             if(tipoLlamada == 2){ /// WRITE
             }
 }
+
+
+
+
 

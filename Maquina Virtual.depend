@@ -1,0 +1,48 @@
+# depslib dependency file v1.0
+1789086169 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<stdbool.h>
+	<time.h>
+	"maquinaVirtual.h"
+
+1789084881 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\maquinavirtual.h
+	<stdbool.h>
+	<stdio.h>
+	<string.h>
+	<stdint.h>
+
+1789085706 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\memoriaprincipal.h
+	<stdio.h>
+	<stdbool.h>
+	<stdint.h>
+	"maquinaVirtual.h"
+
+1789086054 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\maquinavirtual.c
+	"maquinaVirtual.h"
+	"traductor.h"
+	"memoriaPrincipal.h"
+	"instruccion.h"
+
+1789084727 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\traductor.h
+	<stdio.h>
+	"maquinaVirtual.h"
+
+1789086112 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\instruccion.h
+	<stdio.h>
+	<stdint.h>
+	"maquinaVirtual.h"
+	"traductor.h"
+	"memoriaPrincipal.h"
+
+1789085256 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\instruccion.c
+	"instruccion.h"
+
+1789083909 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\traductor.c
+	"traductor.h"
+	"memoriaPrincipal.h"
+
+1789085136 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\memoriaprincipal.c
+	"memoriaPrincipal.h"
+

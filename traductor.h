@@ -20,8 +20,8 @@ typedef struct {
     int32_t opBValor;
 }TRInstruction;
 
-/// Decodifica una instrucción desde la memoria.
-TRInstruction leerInstruccion(ETMaquinaVirtual *maqVirt, int *dirFisica);
+/// Decodifica una instruccion desde la memoria.
+TRInstruction leerInstruccion(ETMaquinaVirtual *maqVirt, int32_t *dirFisica);
 int32_t leerOperando(ETMaquinaVirtual *maqVirt, int32_t *dirFisica, uint8_t tipo);
 int32_t operandoDest(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp, int *memoriaP);
 
