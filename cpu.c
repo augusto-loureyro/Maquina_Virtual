@@ -1,88 +1,84 @@
 #include "cpu.h"
-
-Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r){ //hecha completamente con IA, me perdí
+//------
+// Arma el valor de OP1/OP2: byte alto = tipo, los 3 bytes restantes = el
+// valor tal cual está codificado en memoria (0 a 3 bytes, alineado a la
+// derecha, con ceros a la izquierda si el operando ocupa menos de 3 bytes).
+uint32_t armarRegistroOperando(int tipo, uint8_t *bytes){
+    uint32_t valor = 0;
+    int tam = tamanioOperando(tipo);
+ 
+    for (int i = 0; i < tam; i++){
+        valor = (valor << 8) | bytes[i];
+    }
+ 
+    return ((uint32_t)tipo << 24) | valor;
+}
+Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r){
     Instruccion instr;
-    int categoria, tipoA, tipoB;
-
-    dirFisica dirInstr = traducir(r[REGIP], t, 1, 0); // 0: sin verificar límite (fetch)
+ 
+    dirFisica dirInstr = traducir(r[REGIP], t, r, 1, 0); // fetch: no es acceso a memoria
     uint8_t primerByte = m[dirInstr];
-
-    decodificarPrimerByte(primerByte, &instr.opcode, &categoria);
-    extraerTiposOperando(primerByte, categoria, &tipoA, &tipoB);
-
+ 
+    decodificarPrimerByte(primerByte, &instr.opcode, &instr.categoria);
+ 
+    int tipoA, tipoB;
+    extraerTiposOperando(primerByte, instr.categoria, &tipoA, &tipoB);
+ 
     int tamB = tamanioOperando(tipoB);
     int tamA = tamanioOperando(tipoA);
-
-    instr.operandoB = leerOperando(tipoB, &m[dirInstr + 1]);
-    instr.operandoA = leerOperando(tipoA, &m[dirInstr + 1 + tamB]);
-
+ 
+    uint8_t *bytesB = &m[dirInstr + 1];
+    uint8_t *bytesA = &m[dirInstr + 1 + tamB];
+ 
+    instr.operandoB = leerOperando(tipoB, bytesB);
+    instr.operandoA = leerOperando(tipoA, bytesA);
+ 
+    r[REGOPC] = instr.opcode;
+    r[REGOP1] = armarRegistroOperando(tipoA, bytesA);
+    r[REGOP2] = armarRegistroOperando(tipoB, bytesB);
+ 
     int largoTotal = 1 + tamB + tamA;
-    uint16_t nuevoOffset = (r[REGIP] & 0xFFFF) + largoTotal;
+    uint16_t nuevoOffset = (uint16_t)(r[REGIP] & 0xFFFF) + largoTotal;
     r[REGIP] = (r[REGIP] & 0xFFFF0000) | nuevoOffset;
-
+ 
     return instr;
 }
-
-dirFisica calcularDireccionMemoria(Operando o, tabla_segmentos t, Registros r){
-    dirLogica l = r[o.codigoRegistro] + o.desplazamiento;
-    dirFisica f = traducir(l, t, 4, 1); // 4 bytes, con verificación de límite
-
-    r[REGLAR] = l;
-    r[REGMAR] = (4 << 16) | (f & 0xFFFF);
-
-    return f;
-}
-
-uint32_t leerMemoria4Bytes(Memoria m, dirFisica f){
-    return (m[f] << 24) | (m[f+1] << 16) | (m[f+2] << 8) | m[f+3];
-}
-
-void escribirMemoria4Bytes(Memoria m, dirFisica f, uint32_t valor){
-    m[f]   = (valor >> 24) & 0xFF;
-    m[f+1] = (valor >> 16) & 0xFF;
-    m[f+2] = (valor >> 8) & 0xFF;
-    m[f+3] = valor & 0xFF;
-}
-
 uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r){
+    dirLogica l;
     dirFisica f;
-    uint32_t valor;
-
+ 
     switch (o.tipo){
         case TIPO_REGISTRO:
             return r[o.codigoRegistro];
         case TIPO_INMEDIATO:
-            return (uint32_t)(int32_t)o.inmediato; // extiende el signo a 32 bits
+            return (uint32_t)(int32_t)o.inmediato;
         case TIPO_MEMORIA:
-            f = calcularDireccionMemoria(o, t, r);
-            valor = leerMemoria4Bytes(m, f);
-            r[REGMBR] = valor;
-            return valor;
+            l = r[o.codigoRegistro] + o.desplazamiento;
+            f = traducir(l, t, r, TAMANIO_DATO, 1); // 1: es acceso a memoria (carga LAR/MAR)
+            return leerDeMemoria(m, f, r);           // carga MBR
         default:
             reportarError(ERROR_INSTRUCCION_INVALIDA);
             return 0;
     }
 }
-
+ 
 void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memoria m, Registros r){
+    dirLogica l;
     dirFisica f;
-
+ 
     switch (o.tipo){
         case TIPO_REGISTRO:
             r[o.codigoRegistro] = valor;
             break;
         case TIPO_MEMORIA:
-            f = calcularDireccionMemoria(o, t, r);
-            escribirMemoria4Bytes(m, f, valor);
-            r[REGMBR] = valor;
+            l = r[o.codigoRegistro] + o.desplazamiento;
+            f = traducir(l, t, r, TAMANIO_DATO, 1);
+            escribirEnMemoria(m, f, valor, r);
             break;
         default:
             reportarError(ERROR_INSTRUCCION_INVALIDA);
     }
 }
-
-// IA pura y dura:
-
 #define OPCODE_STOP 0x0F
 #define OPCODE_MOV  0x10
  
@@ -117,7 +113,6 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
 void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r){
     while (hayMasInstrucciones(t, r)){
         Instruccion instr = buscarInstruccion(t, m, r);
-        r[REGOPC] = instr.opcode;
         ejecutarInstruccion(instr, t, m, r);
     }
 }

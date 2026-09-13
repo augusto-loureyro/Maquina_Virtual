@@ -21,3 +21,16 @@ void cargarMemoria(char *nombreArchivo, Memoria m){
     }
 }
 
+uint32_t leerDeMemoria(Memoria m, uint32_t f, Registros r){
+    uint32_t valor = ((uint32_t)m[f] << 24) | ((uint32_t)m[f+1] << 16) | ((uint32_t)m[f+2] << 8) | (uint32_t)m[f+3];
+    r[REGMBR] = valor;
+    return valor;
+}
+ 
+void escribirEnMemoria(Memoria m, uint32_t f, uint32_t valor, Registros r){
+    m[f]   = (valor >> 24) & 0xFF;
+    m[f+1] = (valor >> 16) & 0xFF;
+    m[f+2] = (valor >> 8) & 0xFF;
+    m[f+3] = valor & 0xFF;
+    r[REGMBR] = valor;
+}

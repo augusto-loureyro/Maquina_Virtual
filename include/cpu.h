@@ -10,6 +10,7 @@
 
 typedef struct {
     int opcode;
+    int categoria;
     Operando operandoA;
     Operando operandoB;
 } Instruccion;
