@@ -1,5 +1,5 @@
-#include "include/tablaSegmentos.h"
-#include "include/memoria.h"
+#include "../include/tablaSegmentos.h"
+#include "../include/memoria.h"
 
 
 void inicializarTablaSegmentos(tabla_segmentos t){

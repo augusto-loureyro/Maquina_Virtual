@@ -1,4 +1,4 @@
-#include "include/memoria.h"
+#include "../include/memoria.h"
 
 void reservarMemoria(Memoria *m,int tamanioM){
     *m = (uint8_t *)calloc(tamanioM, 1); //reservo 16384 bytes inicializados en 0...
