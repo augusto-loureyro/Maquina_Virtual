@@ -1,6 +1,4 @@
 #include "consola.h"
-#include "errores.h"
-#include <string.h>
 
 void parsearArgumentos(int argc, char *argv[], char **nombreArchivo,int *flagD){
     int i; 

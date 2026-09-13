@@ -4,6 +4,8 @@
 #define TAMANIO_MEMORIA 16384
 #include<stdio.h>
 #include<stdint.h>
+#include "errores.h"
+#include <stdlib.h>
 
 typedef uint8_t *Memoria;
 

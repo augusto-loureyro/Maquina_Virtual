@@ -2,6 +2,7 @@
 #define DECODIFICADOR_H
 
 #include <stdint.h>
+#include "errores.h"
 
 #define DOS_OPERANDOS 2
 #define UN_OPERANDO 1

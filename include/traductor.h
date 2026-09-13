@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "tablaSegmentos.h"
+#include "errores.h"
 
 typedef uint32_t dirLogica;
 typedef uint32_t dirFisica;

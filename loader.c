@@ -1,6 +1,4 @@
 #include "loader.h"
-#include <stdio.h>
-#include "errores.h"
 
 void procesarHeader(const char *nombreArchivo,uint8_t *version,uint16_t *code_size){
         FILE *archVMX;

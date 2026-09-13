@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include "tablaSegmentos.h"
+#include "util.h"
+
 
 #define CANT_REGISTROS 32
 /// Identificadores de registros

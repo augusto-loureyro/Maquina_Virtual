@@ -1,5 +1,4 @@
 #include "traductor.h"
-#include "errores.h"
 
 dirFisica traducir(dirLogica l, tabla_segmentos t, int cantidadBytes, int verificarLimite){
     int segmento = l >> 16;

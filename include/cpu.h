@@ -5,6 +5,8 @@
 #include "tablaSegmentos.h"
 #include "memoria.h"
 #include "registros.h"
+#include "traductor.h"
+#include "errores.h"
 
 typedef struct {
     int opcode;

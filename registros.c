@@ -1,5 +1,4 @@
 #include "registros.h"
-#include "util.h"
 
 void inicializarRegistros(Registros r){
     for (int i = 0; i < CANT_REGISTROS; i++){

@@ -1,3 +1,6 @@
+#include<stdio.h>
+#include <stdlib.h>
+
 typedef enum {
     ERROR_ARGUMENTOS_INVALIDOS,
     ERROR_ARCHIVO_NO_ENCONTRADO,

@@ -6,6 +6,8 @@
 
 #ifndef consola_h
 #define consola_h
+#include <string.h>
+#include "errores.h"
 
 void parsearArgumentos(int argc, char *argv[], char **nombreArchivo, int *flagD);
 

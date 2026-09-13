@@ -1,6 +1,4 @@
 #include "memoria.h"
-#include "errores.h"
-#include <stdlib.h>
 
 void reservarMemoria(Memoria *m,int tamanioM){
     *m = (uint8_t *)calloc(tamanioM, 1); //reservo 16384 bytes inicializados en 0...

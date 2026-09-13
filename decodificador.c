@@ -1,5 +1,4 @@
 #include "decodificador.h"
-#include "errores.h"
 
 void decodificarPrimerByte(uint8_t primerByte, int *opcode, int *categoria){
     *opcode = primerByte & 0x1F; // 5 bits menos significativos

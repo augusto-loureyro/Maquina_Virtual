@@ -1,7 +1,4 @@
 #include "tablaSegmentos.h"
-#include"memoria.h"
-#include "util.h"
-
 
 void inicializarTablaSegmentos(tabla_segmentos t){
     int i;

@@ -1,6 +1,4 @@
 #include "cpu.h"
-#include "traductor.h"
-#include "errores.h"
 
 Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r){ //hecha completamente con IA, me perdí
     Instruccion instr;

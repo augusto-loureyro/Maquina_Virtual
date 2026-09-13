@@ -5,7 +5,8 @@
 #define CODE 0 
 #define DATA 1
 #include<stdint.h>
-
+#include"memoria.h"
+#include "util.h"
 
 typedef uint32_t tabla_segmentos[CANT_SEG];
 
