@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "consola.h"
-#include "loader.h"
-#include "tablaSegmentos.h"
-#include "memoria.h"
-#include "registros.h"
-#include "cpu.h"
+#include "include/consola.h"
+#include "include/loader.h"
+#include "include/tablaSegmentos.h"
+#include "include/memoria.h"
+#include "include/registros.h"
+#include "include/cpu.h"
 
 int main(int argc, char *argv[]) {
     char *nombreArchivo;

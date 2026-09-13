@@ -1,3 +1,6 @@
+#ifndef ERRORES_H
+#define ERRORES_H
+
 #include<stdio.h>
 #include <stdlib.h>
 
@@ -12,3 +15,4 @@ typedef enum {
 } TipoError;
 
 void reportarError(TipoError tipo);
+#endif

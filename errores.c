@@ -1,4 +1,4 @@
-#include"errores.h"
+#include"include/errores.h"
 
 void reportarError(TipoError tipo) {
     const char *mensaje;

@@ -1,4 +1,4 @@
-#include "consola.h"
+#include "include/consola.h"
 
 void parsearArgumentos(int argc, char *argv[], char **nombreArchivo,int *flagD){
     int i; 

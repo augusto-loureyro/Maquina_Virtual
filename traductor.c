@@ -1,4 +1,4 @@
-#include "traductor.h"
+#include "include/traductor.h"
 
 /* anterior
 dirFisica traducir(dirLogica l, tabla_segmentos t, int cantidadBytes, int verificarLimite){

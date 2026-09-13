@@ -1,4 +1,4 @@
-#include "util.h"
+#include "include/util.h"
 
 uint32_t LCH(uint32_t b, uint16_t h){
     b &= 0x0000FFFF;        // borro la parte alta
