@@ -1,98 +1,81 @@
-/*
-sebas: 
-
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
-#include <stdbool.h>
-#include "maquinaVirtual.h"
-
-#define ARCHT 100
-
-/// argv[0] = vmx
-/// argv[1] = programa.vmx
-/// argv[2] = -d   (Opcional)
+#include "consola.h"
+#include "loader.h"
+#include "tablaSegmentos.h"
+#include "memoria.h"
+#include "registros.h"
+#include "cpu.h"
 
 int main(int argc, char *argv[]) {
-    ETMaquinaVirtual maqVirt;
-    char nombreArchivo[ARCHT];
-    bool modoDebug = false;
-
-    strcpy(nombreArchivo, argv[1]);
-
-    if (strcmp(argv[2],"-d") == 0)
-        modoDebug = true;
-
-    mvInic(&maqVirt, modoDebug);
-    cargarArchivo(&maqVirt, nombreArchivo);
-    mvEjecutar(&maqVirt);
-    return 0;
-}
-
-*/
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h> 
-// ya existe cte FILENAME_MAX en stdio
-/// argv[0] = vmx
-/// argv[1] = programa.vmx
-/// argv[2] = -d   (Opcional) -> disassembler
-
-/*
- en la version 1, se espera: 
-    comando: vmx filename.vmx [-d]
-    --> entonces: argc==2 && *argv=["vmx","filename.vmx"] || argc==3 && *argv= ["vmx","filename.vmx","-d"]
-    //debo comprobar que esto se de así y guardar la info necesaria.
-*/
-
-void procesarHeader(char nombrearchivo[FILENAME_MAX], uint8_t *version,uint16_t *code_size);
-
-int main(int argc, char *argv[])
-{
-    char nombreArchivo[FILENAME_MAX];
-    int flagD = 0;
-    uint8_t version;
+    char *nombreArchivo;
+    int flagD,i;
     uint16_t code_size;
+    uint8_t version;
+    tabla_segmentos t;
+    Memoria m;
+    Registros r;
 
-    if (argc < 2) {
-        fprintf(stderr, "Uso: %s filename.vmx [-d]\n", argv[0]);
-        return 1;
+    parsearArgumentos(argc, argv, &nombreArchivo, &flagD);
+    //--- borrar cartel
+    printf("Archivo: %s\n", nombreArchivo);
+    printf("Desensamblar: %s\n", flagD ? "si" : "no");
+
+    procesarHeader(nombreArchivo,&version,&code_size);
+    //--- borrar cartel
+    printf("Version: %d \n",version);
+    printf("tamaño del codigo: %X\n",code_size);
+
+    cargarTablaSegmentos(t,code_size);
+    //--borrar cartel
+    printf("\n----------------------------------------");
+    printf("\n num segmento \t base \t tamanio ");
+    for(i=0;i<CANT_SEG;i++){
+        printf("\n----------------------------------------");
+        printf("\n\t %d \t %X \t %X ",i,obtenerBaseSegmento(t,i),obtenerTamanioSegmento(t,i));
     }
 
-    if(argc>=2 && strstr(argv[1],".vmx")){ 
-        strcpy(nombreArchivo,argv[1]);
-        flagD = (argc>=3 && strcmp("-d",argv[2])==0);
-    } 
+    reservarMemoria(&m,TAMANIO_MEMORIA);
+    cargarMemoria(nombreArchivo,m);
+    
+    inicializarRegistros(r);
+    //--- borrar cartel
+    printf("\n----------------------------------------");
+    printf("\n num registro \t valor ");
+    for(i=0;i<CANT_REGISTROS;i++){
+        printf("\n----------------------------------------");
+        printf("\n\t %d \t %08X",i,r[i]);
+    }
 
-    procesarHeader(nombreArchivo,&version,&code_size); //no se si iría en main
+    /*
+    // buscar como mostrar y verificar el proceso de buscar instruccion, decodificar, ejecutar
+    printf("\n---------------------------------------------\n");
+    printf("Primer fetch (buscarInstruccion):\n");
+    Instruccion instr = buscarInstruccion(t, m, r);
+    printf("opcode: 0x%02X\n", instr.opcode);
+    printf("tipo operando A: %d\n", instr.operandoA.tipo);
+    printf("tipo operando B: %d\n", instr.operandoB.tipo);
+    printf("IP despues del fetch: 0x%08X\n", r[REGIP]);
+ 
+    if (instr.operandoA.tipo != TIPO_NINGUNO){
+        uint32_t valorA = leerValorOperando(instr.operandoA, t, m, r);
+        printf("valor resuelto operando A: 0x%08X\n", valorA);
+    }
+    if (instr.operandoB.tipo != TIPO_NINGUNO){
+        uint32_t valorB = leerValorOperando(instr.operandoB, t, m, r);
+        printf("valor resuelto operando B: 0x%08X\n", valorB);
+    }
+    */
 
-    printf("Version: %u, code_size: %u, flagD=%d\n", version, code_size, flagD);
-
+    printf("\n---------------------------------------------\n");
+    printf("Ejecutando programa...\n");
+    ejecutarPrograma(t, m, r);
+ 
+    printf("\n---------------------------------------------\n");
+    printf("Registros al finalizar:\n");
+    for (i = 0; i < CANT_REGISTROS; i++){
+        printf("%d \t\t %08X\n", i, r[i]);
+    }
     return 0;
 }
-
-//esto iría en algún otro archivo
-void procesarHeader(char nombrearchivo[FILENAME_MAX], uint8_t *version,uint16_t *code_size){
-        FILE *archVMX;
-        uint8_t header[8];
-
-        if((archVMX = fopen(nombrearchivo,"rb"))!=NULL){
-                if(fread(header, 1, 8, archVMX) == 8) {
-                    if(memcmp(header,"VMX26",5)!=0){  printf("error 1");/* error, no coincide ident. */}
-
-                    *version=header[5];
-                    if(*version!=1){ printf("error 2");/* error, version incompatible*/}
-                    
-                    *code_size = (header[6] << 8) | header[7]; // big-endian
-                }
-
-                fclose(archVMX);
-            }
-}
-
-/*para ejecutar: 
-  primero gcc main.c -o vmx
-  luego  vmx sample.vmx -d
-*/
