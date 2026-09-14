@@ -10,4 +10,3 @@ void inicializarRegistros(Registros r){
     r[REGDS] = LCH(r[REGCS],DATA);
     r[REGIP] = r[REGCS]; //IP apunta a la primera instruccion del CodeSegment
 }
-

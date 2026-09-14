@@ -1,3 +1,5 @@
+// centraliza el manejo de errores; se puede agregar detalle.
+
 #include"include/errores.h"
 
 void reportarError(TipoError tipo) {

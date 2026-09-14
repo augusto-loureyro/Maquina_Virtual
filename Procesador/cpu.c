@@ -80,13 +80,11 @@ void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memori
             reportarError(ERROR_INSTRUCCION_INVALIDA);
     }
 }
+
 #define OPCODE_STOP 0x0F
 #define OPCODE_MOV  0x10
+#define OPCODE_ADD  0x11
  
-// ¿Sigue habiendo una instrucción por ejecutar? Es la condición del loop:
-// se repite mientras IP apunte dentro del segmento de código. No pasa por
-// traducir() a propósito, para no reportar error cuando el programa
-// simplemente termina (con o sin STOP).
 int hayMasInstrucciones(tabla_segmentos t, Registros r){
     int segmento = r[REGIP] >> 16;
     uint16_t offset = r[REGIP] & 0xFFFF;
@@ -103,6 +101,11 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
             break;
         case OPCODE_MOV:
             valor = leerValorOperando(instr.operandoB, t, m, r);
+            escribirValorOperando(instr.operandoA, valor, t, m, r);
+            actualizarFlagsValor(valor, r);
+            break;
+        case OPCODE_ADD:
+            valor = sumar(leerValorOperando(instr.operandoA, t, m, r),leerValorOperando(instr.operandoB, t, m, r), r);
             escribirValorOperando(instr.operandoA, valor, t, m, r);
             break;
         default:

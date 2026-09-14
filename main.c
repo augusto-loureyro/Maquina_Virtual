@@ -48,26 +48,6 @@ int main(int argc, char *argv[]) {
         printf("\n\t %d \t %08X",i,r[i]);
     }
 
-    /*
-    // buscar como mostrar y verificar el proceso de buscar instruccion, decodificar, ejecutar
-    printf("\n---------------------------------------------\n");
-    printf("Primer fetch (buscarInstruccion):\n");
-    Instruccion instr = buscarInstruccion(t, m, r);
-    printf("opcode: 0x%02X\n", instr.opcode);
-    printf("tipo operando A: %d\n", instr.operandoA.tipo);
-    printf("tipo operando B: %d\n", instr.operandoB.tipo);
-    printf("IP despues del fetch: 0x%08X\n", r[REGIP]);
- 
-    if (instr.operandoA.tipo != TIPO_NINGUNO){
-        uint32_t valorA = leerValorOperando(instr.operandoA, t, m, r);
-        printf("valor resuelto operando A: 0x%08X\n", valorA);
-    }
-    if (instr.operandoB.tipo != TIPO_NINGUNO){
-        uint32_t valorB = leerValorOperando(instr.operandoB, t, m, r);
-        printf("valor resuelto operando B: 0x%08X\n", valorB);
-    }
-    */
-
     printf("\n---------------------------------------------\n");
     printf("Ejecutando programa...\n");
     ejecutarPrograma(t, m, r);

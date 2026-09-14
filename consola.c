@@ -1,3 +1,5 @@
+// básico: comprueba que el comando sea válido y obtiene las flags enviadas
+
 #include "include/consola.h"
 
 void parsearArgumentos(int argc, char *argv[], char **nombreArchivo,int *flagD){

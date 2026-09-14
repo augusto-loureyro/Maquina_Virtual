@@ -7,6 +7,7 @@
 #include "registros.h"
 #include "traductor.h"
 #include "errores.h"
+#include "alu.h"
 
 typedef struct {
     int opcode;
