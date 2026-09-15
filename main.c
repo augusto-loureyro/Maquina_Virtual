@@ -14,22 +14,25 @@
 int main(int argc, char *argv[]) {
     ETMaquinaVirtual maqVirt;
     char nombreArchivo[ARCHT];
-    bool modoDebug = false;
+    bool modoDisamble = false;
+    srand(time(NULL));
 
-    /*
     if (argc < 2) {
-        printf("Error: Se requiere el archivo de entrada.\n");
+        printf("Uso: vmx filename.vmx [-d]\n");
         return 1;
-    }*/
+    }else{
+        strcpy(nombreArchivo, argv[2]);
 
-    ///strcpy(nombreArchivo, argv[1]);
-    strcpy(nombreArchivo, "vmt.vmx");
+        if (argc >= 3 && strcmp(argv[3], "-d") == 0)
+            modoDisamble = true;
 
-    if (argc > 2 && strcmp(argv[2],"-d") == 0)
-        modoDebug = true;
+        mvInic(&maqVirt, modoDisamble);
 
-    mvInic(&maqVirt, modoDebug);
-    cargarArchivo(&maqVirt, nombreArchivo);
-    mvEjecutar(&maqVirt);
-    return 0;
+        if (!cargarArchivo(&maqVirt, nombreArchivo)) {
+            return 1;
+        }else{
+            mvEjecutar(&maqVirt);
+            return 0;
+        }
+    }
 }

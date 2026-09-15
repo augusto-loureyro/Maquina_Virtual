@@ -11,6 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="vmx archivoAsm.vmx -d" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -31,9 +32,14 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="desensamblar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="desensamblar.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="instruccion.c">
 			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="instruccion.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -47,14 +53,12 @@
 		<Unit filename="maquinaVirtual.h" />
 		<Unit filename="memoriaPrincipal.c">
 			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="memoriaPrincipal.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="traductor.c">
 			<Option compilerVar="CC" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="traductor.h">
 			<Option target="&lt;{~None~}&gt;" />

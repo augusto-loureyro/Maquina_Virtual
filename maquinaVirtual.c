@@ -2,17 +2,17 @@
 #include "traductor.h"
 #include "memoriaPrincipal.h"
 #include "instruccion.h"
+#include "desensamblar.h"
 
 
-
-void mvInic(ETMaquinaVirtual *maqVirt, bool modoDebug) {
+void mvInic(ETMaquinaVirtual *maqVirt, bool modoDisamble) {
     int i;
 
     /// Se inicializa la memoria con 0 para que no haya trash.
     memset(&(maqVirt->memoria), 0, sizeof(maqVirt->memoria));
 
     /// Se inicializan variables de control
-    maqVirt->modoDebug = modoDebug;
+    maqVirt->modoDisamble = modoDisamble;
     maqVirt->error = false;
     maqVirt->running = false;
 
@@ -90,9 +90,6 @@ bool cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
                 }
         fclose(arch);
         return flag;
-    }else{
-        printf("No se pudo abrir el archivo: %s\n", nombreArchivo);
-        return flag;
     }
 }
 
@@ -128,8 +125,13 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt) {
 
                 /// Ejecutamos la instruccion
                 ejecutarInstruction(maqVirt, inst);
+
+                /// Modo desensamblar: Muestra la instruccion
+                if (maqVirt->modoDisamble && !maqVirt->error)
+                    mostrarInstruccion(maqVirt, inst, dirFisica, dirFisicaTem);
+
             }else
-                maqVirt->running = false; /// Fuera del segmento de codigo
+                mvError(maqVirt, "Fallo de segmento (fetch instruccion).");
         }
     }
 }
@@ -137,14 +139,12 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt) {
 
 
 void guardarResult(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp, int32_t result) {
-    int memoriaP = 0;
-    int32_t dest = operandoDest(maqVirt, tipoOp, valorOp, &memoriaP);
+    int32_t dest = operandoDest(maqVirt, tipoOp, valorOp);
 
-    if (memoriaP) {
+    if(tipoOp == OPMEM)
         writeMem(maqVirt, dest, result);
-    } else {
+    else
         maqVirt->registros[dest] = result;
-    }
 }
 
 

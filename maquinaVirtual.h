@@ -71,7 +71,7 @@ typedef struct {
     ETSegmento segTabla[SEGMENTOS];
     bool running;
     bool error;
-    bool modoDebug;
+    bool modoDisamble;
 }ETMaquinaVirtual;
 
 

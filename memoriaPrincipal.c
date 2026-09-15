@@ -75,7 +75,7 @@ void writeMem(ETMaquinaVirtual *maqVirt, int32_t dirLogica, int32_t valor){
         maqVirt->registros[REGMBR] = valor;
 
 
-        /// Escritura en Big Endian (4 bytes)
+        /// Escritura en Big Ending (4 bytes)
         maqVirt->memoria[dirFisica] = (valor >> 24) & 0xFF;
         maqVirt->memoria[dirFisica + 1] = (valor >> 16) & 0xFF;
         maqVirt->memoria[dirFisica + 2] = (valor >> 8) & 0xFF;

@@ -2,6 +2,7 @@
 #define TRADUCTOR_H_INCLUDED
 
 #include <stdio.h>
+#include <stdint.h>
 #include "maquinaVirtual.h"
 
 
@@ -23,9 +24,7 @@ typedef struct {
 /// Decodifica una instruccion desde la memoria.
 TRInstruction leerInstruccion(ETMaquinaVirtual *maqVirt, int32_t *dirFisica);
 int32_t leerOperando(ETMaquinaVirtual *maqVirt, int32_t *dirFisica, uint8_t tipo);
-int32_t operandoDest(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp, int *memoriaP);
-
-///-------------
+int32_t operandoDest(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp);
 void llamadaSistema(ETMaquinaVirtual *maqVirt, int32_t tipoLlamada);
 
 #endif // TRADUCTOR_H_INCLUDED

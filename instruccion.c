@@ -1,8 +1,5 @@
 #include "instruccion.h"
 
-
-
-
 void ejecutarInstruction(ETMaquinaVirtual *maqVirt,TRInstruction inst){
     int32_t valA = inst.opAValor, valB = inst.opBValor, result=0;
     bool n = false, z = false, c = false, o = false;
@@ -116,6 +113,7 @@ void ejecutarInstruction(ETMaquinaVirtual *maqVirt,TRInstruction inst){
                 mvError(maqVirt, "Division por cero");
             }else{
                 result = valA / valB;
+                maqVirt->registros[REGAC] = valA % valB;
                 guardarResult(maqVirt, inst.tipoOpA, inst.opAValor, result);
                 n = (result < 0);
                 z = (result == 0);
@@ -264,6 +262,4 @@ bool verificarOverflow(int32_t valA, int32_t valB, int32_t resultado, char op) {
             return false;
     }
 }
-
-
 
