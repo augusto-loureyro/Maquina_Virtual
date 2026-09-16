@@ -30,6 +30,34 @@ uint32_t sumar(uint32_t a, uint32_t b, Registros r){
     return resultado;
 }
 
+uint32_t restar(uint32_t a, uint32_t b, Registros r){
+    uint64_t restaCompleta = (uint64_t)a + (uint64_t)b;
+    uint32_t resultado = (uint32_t)restaCompleta;
+
+    int signoA = (int32_t)a < 0;
+    int signoB = (int32_t)b < 0;
+    int signoResultado = (int32_t)resultado < 0;
+
+    int n = signoResultado;
+    int z = (resultado == 0);
+    int c = (restaCompleta > 0xFFFFFFFFu);
+    int v = (signoA != signoB) && (signoResultado != signoA);
+
+    actualizarCC(r, n, z, c, v);
+
+    return resultado;
+}
+
+uint32_t multiplicar(uint32_t a, uint32_t b, Registros r){
+    //multiplicar
+}
+
+uint32_t dividir(uint32_t a, uint32_t b, Registros r){
+    //dividir, recordar AC:=resto
+}
+
+
+
 void actualizarFlagsValor(uint32_t valor, Registros r){
     int n = (int32_t)valor < 0;
     int z = (valor == 0);

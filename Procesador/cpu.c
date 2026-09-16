@@ -84,6 +84,7 @@ void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memori
 #define OPCODE_STOP 0x0F
 #define OPCODE_MOV  0x10
 #define OPCODE_ADD  0x11
+#define OPCODE_SUB  0x12
  
 int hayMasInstrucciones(tabla_segmentos t, Registros r){
     int segmento = r[REGIP] >> 16;
