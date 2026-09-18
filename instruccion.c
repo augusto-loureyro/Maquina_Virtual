@@ -5,7 +5,19 @@ void ejecutarInstruction(ETMaquinaVirtual *maqVirt,TRInstruction inst){
     bool n = false, z = false, c = false, o = false;
     bool modControl = false;
 
+    /// Obtener los VALORES REALES desreferenciados de los operandos
+    if (inst.cantOperand == 1) {
+        valA = obtenerValorOperando(maqVirt, inst.tipoOpA, inst.opAValor);
+    }else
+        if (inst.cantOperand == 2) {
+            valB = obtenerValorOperando(maqVirt, inst.tipoOpB, inst.opBValor);
+            valA = obtenerValorOperando(maqVirt, inst.tipoOpA, inst.opAValor);
+        }
 
+    /// SI OBTENER EL VALOR FALLO (Fallo de segmento en readMem)
+    if (!maqVirt->running || maqVirt->error) {
+        return;
+    }
 
     switch (inst.operacion) {
         /// Sin Operandos
@@ -20,14 +32,14 @@ void ejecutarInstruction(ETMaquinaVirtual *maqVirt,TRInstruction inst){
             break;
             case 0x02: /// JP
             if (((maqVirt->registros[REGCC] & NMASK) == 0) && ((maqVirt->registros[REGCC] & ZMASK) == 0))
-                maqVirt->registros[REGIP] = inst.opAValor;
+                maqVirt->registros[REGIP] = inst.opAValor & 0xFFFF;
             break;
         case 0x03: /// JN
             if ((maqVirt->registros[REGCC] & NMASK) != 0)
-                maqVirt->registros[REGIP] = inst.opAValor;
+                maqVirt->registros[REGIP] = inst.opAValor & 0xFFFF;
             break;
         case 0x04: /// JZ
-            if ((maqVirt->registros[REGCC] & ZMASK) == 0)
+            if ((maqVirt->registros[REGCC] & ZMASK) != 0)
                 maqVirt->registros[REGIP] = inst.opAValor;
             break;
         case 0x05: /// JC

@@ -57,7 +57,7 @@ bool cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
         /// Leer la cabecera
         if (fread(header, sizeof(header), 1, arch) != 1) {
             printf("Cabecera invalida\n");
-        }else
+        }else{
             if (memcmp(header, "VMX26", 5) != 0) { ///memcmp. Devuelve 0 si ambos bloques de memoria son exactamente iguales en su contenido.
                 printf("Identificador de programa invalido\n");
             }else
@@ -84,12 +84,18 @@ bool cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
                     maqVirt->registros[REGIP] = maqVirt->registros[REGCS];
 
                     /// Cargar codigo en memoria fisica
+                    /// Posicionarse justo despues del header de 8 bytes
+                    fseek(arch, 8, SEEK_SET);
+
+                    /// Cargar solo el codigo/datos en la memoria
                     fread(maqVirt->memoria, 1, DIMMEMORIA, arch);
                     fclose(arch);
                     flag = true;
                 }
+        }
         fclose(arch);
         return flag;
+
     }
 }
 
@@ -125,6 +131,10 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt) {
 
                 /// Ejecutamos la instruccion
                 ejecutarInstruction(maqVirt, inst);
+                /// Si la instruccion fallo internamente, rompemos el ciclo
+                if (!maqVirt->running || maqVirt->error) {
+                    break;
+                }
 
                 /// Modo desensamblar: Muestra la instruccion
                 if (maqVirt->modoDisamble && !maqVirt->error)

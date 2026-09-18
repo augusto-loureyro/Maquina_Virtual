@@ -1,157 +1,61 @@
 #include "desensamblar.h"
 
 
-char* mnemonico(uint8_t code){
-    char mnem[5];
-    switch(code){
-        case 0x00:
-            strcpy(mnem,"SYS");
-            break;
-        case 0x01:
-            strcpy(mnem,"JMP");
-            break;
-        case 0x02:
-            strcpy(mnem,"JP");
-            break;
-        case 0x03:
-            strcpy(mnem,"JN");
-            break;
-        case 0x04:
-            strcpy(mnem,"JZ");
-            break;
-        case 0x05:
-            strcpy(mnem,"JC");
-            break;
-        case 0x06:
-            strcpy(mnem,"JV");
-            break;
-        case 0x07:
-            strcpy(mnem,"JNP");
-            break;
-        case 0x08:
-            strcpy(mnem,"JNN");
-            break;
-        case 0x09:
-            strcpy(mnem,"JNZ");
-            break;
-        case 0x0A:
-            strcpy(mnem,"NOT");
-            break;
-        case 0x0F:
-            strcpy(mnem,"STOP");
-            break;
-        case 0x10:
-            strcpy(mnem,"MOV");
-            break;
-        case 0x11:
-            strcpy(mnem,"ADD");
-            break;
-        case 0x12:
-            strcpy(mnem,"SUB");
-            break;
-        case 0x13:
-            strcpy(mnem,"MUL");
-            break;
-        case 0x14:
-            strcpy(mnem,"DIV");
-            break;
-        case 0x15:
-            strcpy(mnem,"CMP");
-            break;
-        case 0x16:
-            strcpy(mnem,"AND");
-            break;
-        case 0x17:
-            strcpy(mnem,"OR");
-            break;
-        case 0x18:
-            strcpy(mnem,"XOR");
-            break;
-        case 0x19:
-            strcpy(mnem,"SWAP");
-            break;
-        case 0x1A:
-            strcpy(mnem,"SHL");
-            break;
-        case 0x1B:
-            strcpy(mnem,"SHR");
-            break;
-        case 0x1C:
-            strcpy(mnem,"SAR");
-            break;
-        case 0x1D:
-            strcpy(mnem,"LDL");
-            break;
-        case 0x1E:
-            strcpy(mnem,"LDH");
-            break;
-        case 0x1F:
-            strcpy(mnem,"RND");
-            break;
-        default:
-            strcpy(mnem,"XXX");
+ char* mnemonico(uint8_t code) {
+    switch(code) {
+        case 0x00: return "SYS";
+        case 0x01: return "JMP";
+        case 0x02: return "JP";
+        case 0x03: return "JN";
+        case 0x04: return "JZ";
+        case 0x05: return "JC";
+        case 0x06: return "JV";
+        case 0x07: return "JNP";
+        case 0x08: return "JNN";
+        case 0x09: return "JNZ";
+        case 0x0A: return "NOT";
+        case 0x0F: return "STOP";
+        case 0x10: return "MOV";
+        case 0x11: return "ADD";
+        case 0x12: return "SUB";
+        case 0x13: return "MUL";
+        case 0x14: return "DIV";
+        case 0x15: return "CMP";
+        case 0x16: return "AND";
+        case 0x17: return "OR";
+        case 0x18: return "XOR";
+        case 0x19: return "SWAP";
+        case 0x1A: return "SHL";
+        case 0x1B: return "SHR";
+        case 0x1C: return "SAR";
+        case 0x1D: return "LDL";
+        case 0x1E: return "LDH";
+        case 0x1F: return "RND";
+        default:   return "XXX";
     }
-    return mnem;
 }
 
-char* nombreRegistro(uint8_t reg){
-    char nombre[5];
-    switch(reg){
-        case 0:
-            strcpy(nombre,"IP");
-            break;
-        case 1:
-            strcpy(nombre, "OPC");
-            break;
-        case 2:
-            strcpy(nombre, "OP1");
-            break;
-        case 3:
-            strcpy(nombre, "OP2");
-            break;
-        case 4:
-            strcpy(nombre, "LAR");
-            break;
-        case 5:
-            strcpy(nombre, "MAR");
-            break;
-        case 6:
-            strcpy(nombre, "MBR");
-            break;
-        case 10:
-            strcpy(nombre, "EAX");
-            break;
-        case 11:
-            strcpy(nombre, "EBX");
-            break;
-        case 12:
-            strcpy(nombre, "ECX");
-            break;
-        case 13:
-            strcpy(nombre, "EDX");
-            break;
-        case 14:
-            strcpy(nombre, "EEX");
-            break;
-        case 15:
-            strcpy(nombre, "EFX");
-            break;
-        case 16:
-            strcpy(nombre, "AC");
-            break;
-        case 17:
-            strcpy(nombre, "CC");
-            break;
-        case 26:
-            strcpy(nombre, "CS");
-            break;
-        case 27:
-            strcpy(nombre, "DS");
-            break;
-        default:
-            strcpy(nombre, "XXX");
+ char* nombreRegistro(uint8_t reg) {
+    switch(reg) {
+        case 0:  return "IP";
+        case 1:  return "OPC";
+        case 2:  return "OP1";
+        case 3:  return "OP2";
+        case 4:  return "LAR";
+        case 5:  return "MAR";
+        case 6:  return "MBR";
+        case 10: return "EAX";
+        case 11: return "EBX";
+        case 12: return "ECX";
+        case 13: return "EDX";
+        case 14: return "EEX";
+        case 15: return "EFX";
+        case 16: return "AC";
+        case 17: return "CC";
+        case 26: return "CS";
+        case 27: return "DS";
+        default: return "XXX";
     }
-    return nombre;
 }
 
 
@@ -162,9 +66,10 @@ void armarOperando(char *operando, uint8_t tipoOp, int32_t valor){
     if(tipoOp == OPREG)
         sprintf(operando, "%s", nombreRegistro(valor & 0x1F)); /// 5 bits menos significativos representan el registro
     else
-        if(tipoOp == OPIMM)
-            sprintf(operando, "%d", (valor & 0xFFFF)); /// 16 bits menos significativos (Valor decimal)
-        else
+        if(tipoOp == OPIMM){
+            sprintf(operando, "%04X", (valor & 0xFFFF));
+            ///sprintf(operando, "%d", (valor & 0xFFFF)); /// 16 bits menos significativos (Valor decimal)
+        }else
             if(tipoOp == OPMEM){    /// 16bits desplazamiento + 3 bits reservados + 5 cod registro
                 desplazamiento = (valor >> 8) & 0xFFFF; /// 16bits
                 codRegistro = valor & 0x1F;     /// 5bits

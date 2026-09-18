@@ -15,7 +15,7 @@ int32_t cambioLogicFisic(ETMaquinaVirtual *maqVirt, int32_t dirLogica) {
             return -1; /// Segmento Restringido
         }else{
             dirFisica = segmento.base + despla;
-            if(dirFisica < segmento.dim)
+            if(despla < segmento.dim)
                 return dirFisica;
             else
                 return -1; /// Overflow del segmento
@@ -24,14 +24,14 @@ int32_t cambioLogicFisic(ETMaquinaVirtual *maqVirt, int32_t dirLogica) {
         return -1; /// Segmento Inexistente
 }
 
-uint8_t siguienteByte(ETMaquinaVirtual *maqVirt, int32_t *dirLogica) {
+uint8_t siguienteByte(ETMaquinaVirtual *maqVirt, int32_t *dirFisica) {
     uint8_t byte;
-    if (*dirLogica >= DIMMEMORIA) {
+    if(*dirFisica >= DIMMEMORIA || *dirFisica < 0){
         mvError(maqVirt, "Fallo de segmento (fetch instruccion).");
         return 0;
     }else{
-        byte = maqVirt->memoria[*dirLogica];
-        (*dirLogica)++;
+        byte = maqVirt->memoria[*dirFisica];
+        (*dirFisica)++;
         return byte;
     }
 }

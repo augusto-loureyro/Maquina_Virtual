@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1789333691 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\main.c
+1789592578 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -19,14 +19,14 @@
 	<stdint.h>
 	"maquinaVirtual.h"
 
-1789407343 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\maquinavirtual.c
+1789668977 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\maquinavirtual.c
 	"maquinaVirtual.h"
 	"traductor.h"
 	"memoriaPrincipal.h"
 	"instruccion.h"
 	"desensamblar.h"
 
-1789407420 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\traductor.h
+1789597640 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\traductor.h
 	<stdio.h>
 	<stdint.h>
 	"maquinaVirtual.h"
@@ -39,14 +39,14 @@
 	"traductor.h"
 	"memoriaPrincipal.h"
 
-1789342677 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\instruccion.c
+1789669018 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\instruccion.c
 	"instruccion.h"
 
-1789407440 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\traductor.c
+1789666687 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\traductor.c
 	"traductor.h"
 	"memoriaPrincipal.h"
 
-1789341147 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\memoriaprincipal.c
+1789597306 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\memoriaprincipal.c
 	"memoriaPrincipal.h"
 
 1789339537 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\desensamblar.h
@@ -55,6 +55,6 @@
 	<stdint.h>
 	"traductor.h"
 
-1789341119 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\desensamblar.c
+1789598461 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual\desensamblar.c
 	"desensamblar.h"
 
