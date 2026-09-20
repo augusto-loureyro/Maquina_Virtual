@@ -103,7 +103,7 @@ void mostrarInstruccion(ETMaquinaVirtual *maqVirt, TRInstruction inst, int32_t d
 
 
     /// Imprimir formato: [0000] XX XX XX XX | MNEM OPA, OPB
-    printf("[%04X] %-14s | %-4s ", dirFisicaInc, byteHexa, mnemonico(inst.operacion));
+    printf("[%04X] %-14s  | %-4s ", dirFisicaInc, byteHexa, mnemonico(inst.operacion));
 
     if (inst.cantOperand == 2)
         printf("%s, %s;\n", opA, opB);
