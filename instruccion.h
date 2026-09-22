@@ -10,7 +10,7 @@
 #include "memoriaPrincipal.h"
 
 
-void ejecutarInstruction(ETMaquinaVirtual *maqVirt,TRInstruction inst);
-bool verificarOverflow(int32_t valA, int32_t valB, int32_t resultado, char op);
+void ejecutarInstruccion(ETMaquinaVirtual *maqVirt);
+bool verificarOverflow(int valA, int valB, int resultado, char op);
 
 #endif // INSTRUCCION_H_INCLUDED

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define DIMMEMORIA 16384 ///16 KiB = 16384 bits
+#define DIMMEMORIA 16384 // 16 KiB = 16384 bytes
 #define REGISTROS 32
 #define SEGMENTOS 8
 
@@ -56,31 +56,25 @@
 #define CBIT 29
 #define OBIT 28
 
-#define NMASK (1 << NBIT)  ///2147483648
-#define ZMASK (1 << ZBIT)  ///1073741824
-#define CMASK (1 << CBIT)  ///536870912
-#define OMASK (1 << OBIT)  ///268435456
+#define NMASK (1 << NBIT)  // 2147483648
+#define ZMASK (1 << ZBIT)  // 1073741824
+#define CMASK (1 << CBIT)  // 536870912
+#define OMASK (1 << OBIT)  // 268435456
 
 typedef struct {
-    int base;
-    int dim;
-}ETSegmento;
-typedef struct {
-    uint8_t memoria[DIMMEMORIA];
+    int8_t memoria[DIMMEMORIA]; /// Direcciones fisicas
+    uint32_t segTabla[SEGMENTOS]; /// 2 bytes base (dir fisica), 2 bytes tamanio en bytes
     int32_t registros[REGISTROS];
-    ETSegmento segTabla[SEGMENTOS];
-    bool running;
-    bool error;
-    bool modoDisamble;
+    bool running, disassembler;
 }ETMaquinaVirtual;
 
 
-void mvInic(ETMaquinaVirtual *maqVirt, bool modoDebug);
-bool cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo);
+void mvInic(ETMaquinaVirtual *maqVirt, bool disassembler);
+void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo);
 void mvEjecutar(ETMaquinaVirtual *maqVirt);
 void setFlags(ETMaquinaVirtual *maqVirt, bool n, bool z, bool c, bool o);
 void mvError(ETMaquinaVirtual *maqVirt, char *mensaje);
-void guardarResult(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp, int32_t result);
+void guardarResult(ETMaquinaVirtual *maqVirt, int tipoOp, int valorOp, int result);
 
 
 #endif // MAQUINAVIRTUAL_H_INCLUDED

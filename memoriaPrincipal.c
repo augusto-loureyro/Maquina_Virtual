@@ -1,84 +1,92 @@
 #include "memoriaPrincipal.h"
 
+unsigned int cambioLogicFisic(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, unsigned int tamBytes) {
+    unsigned int segmento, dirFisica, numSeg = dirLogica >> 16;
+    int baseSeg, despla = dirLogica & 0xFFFF;
 
-int32_t cambioLogicFisic(ETMaquinaVirtual *maqVirt, int32_t dirLogica) {
-    ETSegmento segmento;
-    int despla = dirLogica & 0xFFFF;
-    int numSeg = dirLogica >> 16;
-    int32_t dirFisica;
+    if (numSeg < 0 || numSeg > SEGMENTOS) ///Segmento inexistente
+        return -1;
 
-    if (numSeg >= 0 && numSeg < SEGMENTOS) {
-        segmento = maqVirt->segTabla[numSeg];
-        dirFisica = segmento.base + despla;
+    segmento = maqVirt->segTabla[numSeg];
 
-        if (segmento.base == 0xFFFF && segmento.dim == 0xFFFF) {
-            return -1; /// Segmento Restringido
-        }else{
-            dirFisica = segmento.base + despla;
-            if(despla < segmento.dim)
-                return dirFisica;
-            else
-                return -1; /// Overflow del segmento
-        }
-    }else
-        return -1; /// Segmento Inexistente
+    if (segmento == 0xFFFFFFFF) /// Segmento Restringido
+        return -1;
+
+    baseSeg = segmento >> 16;
+
+    dirFisica = baseSeg + despla;
+
+    if (dirFisica < baseSeg || dirFisica > baseSeg + (segmento & 0xFFFF) - tamBytes) /// Desbordamiento de segmento
+        return -1;
+    else
+        return dirFisica;
 }
-
-uint8_t siguienteByte(ETMaquinaVirtual *maqVirt, int32_t *dirFisica) {
-    uint8_t byte;
-    if(*dirFisica >= DIMMEMORIA || *dirFisica < 0){
-        mvError(maqVirt, "Fallo de segmento (fetch instruccion).");
-        return 0;
-    }else{
-        byte = maqVirt->memoria[*dirFisica];
-        (*dirFisica)++;
-        return byte;
-    }
-}
-
-
-
 
 
 /// Lectura y Escritura
-int32_t readMem(ETMaquinaVirtual *maqVirt, int32_t dirLogica){
-    int32_t dirFisica, valor;
+int8_t leerByteDirFisica(ETMaquinaVirtual *maqVirt, unsigned int dirFisica) {
+    if (dirFisica >= DIMMEMORIA || dirFisica < 0) {
+        mvError(maqVirt, "Direccion invalida");
+        return 0;
+    }
+
+    return maqVirt->memoria[dirFisica];
+}
+
+
+int readMem(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, unsigned int tamBytes) {
+    unsigned int dirFisica;
+    int i, valor = 0;
 
     maqVirt->registros[REGLAR] = dirLogica;
-    dirFisica = cambioLogicFisic(maqVirt,dirLogica);
-    if (dirFisica < 0) {
+
+    dirFisica = cambioLogicFisic(maqVirt,dirLogica,tamBytes);
+
+    if (dirFisica == -1)
         mvError(maqVirt, "Fallo de segmento (lectura).");
-        return 0;
-    } else {
+    else {
         maqVirt->registros[REGMAR] = dirFisica;
 
         /// Lectura en Big Endian
-        valor = (maqVirt->memoria[dirFisica] << 24) |
+        for (i = 0; i < tamBytes; i++) {
+            valor = (valor << 8) | (uint8_t)maqVirt->memoria[dirFisica + i];
+        }
+
+        /*valor = (maqVirt->memoria[dirFisica] << 24) |
                 (maqVirt->memoria[dirFisica + 1] << 16) |
                 (maqVirt->memoria[dirFisica + 2] << 8) |
-                (maqVirt->memoria[dirFisica + 3]);
+                (maqVirt->memoria[dirFisica + 3]);*/
 
         maqVirt->registros[REGMBR] = valor;
-        return valor;
     }
-}
-void writeMem(ETMaquinaVirtual *maqVirt, int32_t dirLogica, int32_t valor){
-    int32_t dirFisica;
 
+    return valor;
+}
+
+
+void writeMem(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, int valor, unsigned int tamBytes) {
+    unsigned int dirFisica;
+    int i;
 
     maqVirt->registros[REGLAR] = dirLogica;
-    dirFisica = cambioLogicFisic(maqVirt,dirLogica);
-    if(dirFisica < 0) {
+
+    dirFisica = cambioLogicFisic(maqVirt,dirLogica,tamBytes);
+
+    if(dirFisica == -1)
         mvError(maqVirt, "Fallo de segmento (escritura).");
-    } else {
+    else {
         maqVirt->registros[REGMAR] = dirFisica;
         maqVirt->registros[REGMBR] = valor;
 
+        /// Escritura en Big Endian
+        for (i = tamBytes - 1; i >= 0; i--) {
+            maqVirt->memoria[dirFisica + i] = valor & 0xFF;
+            valor >>= 8;
+        }
 
-        /// Escritura en Big Ending (4 bytes)
-        maqVirt->memoria[dirFisica] = (valor >> 24) & 0xFF;
+        /*maqVirt->memoria[dirFisica] = (valor >> 24) & 0xFF;
         maqVirt->memoria[dirFisica + 1] = (valor >> 16) & 0xFF;
         maqVirt->memoria[dirFisica + 2] = (valor >> 8) & 0xFF;
-        maqVirt->memoria[dirFisica + 3] = valor & 0xFF;
+        maqVirt->memoria[dirFisica + 3] = valor & 0xFF;*/
     }
 }

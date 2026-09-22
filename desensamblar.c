@@ -1,7 +1,7 @@
 #include "desensamblar.h"
 
 
- char* mnemonico(uint8_t code) {
+char* mnemonico(int code) {
     switch(code) {
         case 0x00: return "SYS";
         case 0x01: return "JMP";
@@ -35,84 +35,76 @@
     }
 }
 
- char* nombreRegistro(uint8_t reg) {
+char* nombreRegistro(int reg) {
     switch(reg) {
-        case 0:  return "IP";
-        case 1:  return "OPC";
-        case 2:  return "OP1";
-        case 3:  return "OP2";
-        case 4:  return "LAR";
-        case 5:  return "MAR";
-        case 6:  return "MBR";
-        case 10: return "EAX";
-        case 11: return "EBX";
-        case 12: return "ECX";
-        case 13: return "EDX";
-        case 14: return "EEX";
-        case 15: return "EFX";
-        case 16: return "AC";
-        case 17: return "CC";
-        case 26: return "CS";
-        case 27: return "DS";
+        case REGIP:  return "IP";
+        case REGOPC:  return "OPC";
+        case REGOP1:  return "OP1";
+        case REGOP2:  return "OP2";
+        case REGLAR:  return "LAR";
+        case REGMAR:  return "MAR";
+        case REGMBR:  return "MBR";
+        case REGEAX: return "EAX";
+        case REGEBX: return "EBX";
+        case REGECX: return "ECX";
+        case REGEDX: return "EDX";
+        case REGEEX: return "EEX";
+        case REGEFX: return "EFX";
+        case REGAC: return "AC";
+        case REGCC: return "CC";
+        case REGCS: return "CS";
+        case REGDS: return "DS";
         default: return "XXX";
     }
 }
 
 
-void armarOperando(char *operando, uint8_t tipoOp, int32_t valor){
-    uint8_t codRegistro;
-    int desplazamiento;
+void armarOperando(char *operando, ETMaquinaVirtual *maqVirt, int op) {
+    int desplazamiento, tipoOp;
 
-    if(tipoOp == OPREG)
-        sprintf(operando, "%s", nombreRegistro(valor & 0x1F)); /// 5 bits menos significativos representan el registro
+    tipoOp = (op >> 24) & 0xFF;
+
+    if (tipoOp == OPREG)
+        sprintf(operando, "%s", nombreRegistro(operandoDest(maqVirt, tipoOp, op)));
     else
-        if(tipoOp == OPIMM){
-            sprintf(operando, "%04X", (valor & 0xFFFF));
-            ///sprintf(operando, "%d", (valor & 0xFFFF)); /// 16 bits menos significativos (Valor decimal)
-        }else
-            if(tipoOp == OPMEM){    /// 16bits desplazamiento + 3 bits reservados + 5 cod registro
-                desplazamiento = (valor >> 8) & 0xFFFF; /// 16bits
-                codRegistro = valor & 0x1F;     /// 5bits
-                if(desplazamiento == 0)
-                    sprintf(operando, "[%s]", nombreRegistro(codRegistro));
+        if (tipoOp == OPIMM)
+            sprintf(operando, "%02X", operandoDest(maqVirt, tipoOp, op));
+        else {
+            desplazamiento = (op >> 8) & 0xFFFF;
+
+            if (desplazamiento == 0)
+                sprintf(operando, "[%s]", nombreRegistro(operandoDest(maqVirt, OPREG, op)));
+            else
+                if (desplazamiento > 0)
+                    sprintf(operando, "[%s+%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
                 else
-                    if (desplazamiento > 0)
-                        sprintf(operando, "[%s+%d]", nombreRegistro(codRegistro), desplazamiento);
-                    else
-                        sprintf(operando, "[%s%d]", nombreRegistro(codRegistro), desplazamiento);
-            }
+                    sprintf(operando, "[%s-%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
+        }
 }
 
 
-void mostrarInstruccion(ETMaquinaVirtual *maqVirt, TRInstruction inst, int32_t dirFisicaInc, int32_t dirFisicaFin){
-    int32_t longitud = dirFisicaFin - dirFisicaInc;
-    char byteHexa[32] = {0}; /// Se inicializa la instruccion completa a mostrar
-    char opA[32] = {0}, opB[32] = {0};
+void mostrarInstruccion(ETMaquinaVirtual *maqVirt, unsigned int dirFisicaInc, unsigned int dirFisicaFin) {
+    char byteHexa[30] = {0}, opA[30] = {0}, opB[30] = {0};
     int i, pos = 0;
 
-    for(i = 0; i < longitud; i++){
-        pos += sprintf(&byteHexa[pos], "%02X ", maqVirt->memoria[dirFisicaInc + i]);
+    for(i = 0; dirFisicaInc + i < dirFisicaFin; i++)
+        pos += sprintf(&byteHexa[pos], "%02X ", leerByteDirFisica(maqVirt, dirFisicaInc + i)); // Retorna cant caracteres escritos ("XX " => 3)
+
+    if (maqVirt->memoria[REGOP1] != 0) {
+        if (maqVirt->memoria[REGOP2] != 0)
+            armarOperando(opB, maqVirt, maqVirt->memoria[REGOP2]);
+        armarOperando(opA, maqVirt, maqVirt->memoria[REGOP1]);
     }
 
-    if(inst.cantOperand == 2){
-        armarOperando(opB, inst.tipoOpB, inst.opBValor);
-        armarOperando(opA, inst.tipoOpA, inst.opAValor);
-    }else
-        if(inst.cantOperand == 1)
-            armarOperando(opA, inst.tipoOpA, inst.opAValor);
-
-
     /// Imprimir formato: [0000] XX XX XX XX | MNEM OPA, OPB
-    printf("[%04X] %-14s  | %-4s ", dirFisicaInc, byteHexa, mnemonico(inst.operacion));
+    printf("[%04X] %-14s  | %-4s ", dirFisicaInc, byteHexa, mnemonico(maqVirt->registros[REGOPC]));
 
-    if (inst.cantOperand == 2)
-        printf("%s, %s;\n", opA, opB);
-    else
-        if (inst.cantOperand == 1)
-            printf("%s;\n", opA);
+    if (maqVirt->memoria[REGOP1] != 0) {
+        if (maqVirt->memoria[REGOP2] != 0)
+            printf("%s, %s", opA, opB);
         else
-            printf(";\n");
+            printf("%s", opA);
+    }
 
+    printf("\n");
 }
-
-
