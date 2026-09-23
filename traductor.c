@@ -4,8 +4,9 @@
 void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
     uint8_t byte = (uint8_t)leerByteDirFisica(maqVirt, *dirFisica);
     uint8_t bit7y6 = byte >> 6;
-    uint8_t bit5y4 = byte >> 4 & 0x03; // XX01 & 0011
+    uint8_t bit5y4 = byte >> 4 & 0x03; /// XX01 & 0011
     uint8_t bit4a0 = byte & 0x1F;
+    //printf("%X %X %X %X\n", byte, bit7y6, bit5y4, bit4a0);
 
     (*dirFisica)++;
     maqVirt->registros[REGOPC] = bit4a0;
@@ -23,11 +24,14 @@ void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
         maqVirt->registros[REGOP2] = bit7y6 << 24 | leerOperando(maqVirt, dirFisica, bit7y6);
         maqVirt->registros[REGOP1] = bit5y4 << 24 | leerOperando(maqVirt, dirFisica, bit5y4);
     }
+
+    //printf("%X ", maqVirt->registros[REGOP2]);
+    //printf("%X \n", maqVirt->registros[REGOP1]);
 }
 
 int leerOperando(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica, unsigned int bytesALeer) {
     int i, operando = 0;
-    int8_t byte;
+    uint8_t byte;
 
     for (i = 0; i < bytesALeer; i++) {
         byte = leerByteDirFisica(maqVirt, *dirFisica);
@@ -47,24 +51,28 @@ int obtenerValorOperando(ETMaquinaVirtual *maqVirt, int tipoOp, int op) {
             /// Lee de la memoria RAM en la direccion logica del operando
             return readMem(maqVirt, operandoDest(maqVirt, tipoOp, op), sizeof(maqVirt->registros[0]));
         else
-            /// Inmediato (OPIMM)
+            /// Inmediato
             return op & 0xFFFF;
 
 }
 
-int operandoDest(ETMaquinaVirtual *maqVirt, int tipoOp, int op) { /// Extrae informacion de operandos segun tipo
+int operandoDest(ETMaquinaVirtual *maqVirt, int tipoOp, int op) {
     unsigned int registro, dirLogica;
     int desplaz;
 
     if(tipoOp == OPREG) {
+        /// Devuelve num de registro
         return op & 0x1F;
     }else
         if(tipoOp == OPMEM) {
+            /// Interpreta y devuelve direccion logica
             desplaz = (op >> 8) & 0xFFFF;
             registro = op & 0x1F;
-            dirLogica = maqVirt->registros[registro];
-            return dirLogica + desplaz;
+            dirLogica = maqVirt->registros[registro] + desplaz;
+            //printf("\nregistro %d  desplazamiento %d  dirLogica %X\n", registro, desplaz, dirLogica);
+            return dirLogica;
         }else
+            /// Inmediato
             return op & 0xFFFF;
 }
 
@@ -74,11 +82,12 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
     unsigned int regECX = (unsigned int)maqVirt->registros[REGECX];
     unsigned int dirFisica;
     int i, j, valor = 0;
-    char binario[33] = {0};
+    char binario[17] = {0};
     /// Extraer tamaño y cantidad desde ECX
-    unsigned int tamBytes = regECX >> 16; // LDH
-    unsigned int cant = regECX & 0xFFFF; // LDL
+    unsigned int tamBytes = regECX >> 16; /// LDH
+    unsigned int cant = regECX & 0xFFFF; /// LDL
 
+    //printf("\nllamada tipo %d\n", tipoLlamada);
     dirFisica = cambioLogicFisic(maqVirt, dirLogica, tamBytes*cant);
 
     if (dirFisica == -1) {
@@ -113,7 +122,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                     /// Modo Binario (convertido desde string)
                     scanf("%s", binario);
                     for(j = 0; binario[j] != '\0'; j++)
-                        valor = valor*2 + binario[j] - '0'; // agregar cifra derecha => num*base + cifra
+                        valor = valor*2 + binario[j] - '0'; /// agregar cifra derecha => num*base + cifra
                     break;
                 default:
                     mvError(maqVirt, "Modo de lectura invalido");
@@ -137,7 +146,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                     /// Bit 4: Binario
                     if (modo & 0x10) {
                         printf("0b");
-                        for (j = 31; j >= 0; j--) // imprime bit a bit
+                        for (j = 15; j >= 0; j--) /// imprime bit a bit
                             printf("%d", (valor >> j) & 1);
                         printf(" ");
                     }

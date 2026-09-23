@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define DIMMEMORIA 16384 // 16 KiB = 16384 bytes
+#define DIMMEMORIA 16384 /// 16 KiB = 16384 bytes
 #define REGISTROS 32
 #define SEGMENTOS 8
 
@@ -70,8 +70,8 @@ typedef struct {
 
 
 void mvInic(ETMaquinaVirtual *maqVirt, bool disassembler);
-void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo);
-void mvEjecutar(ETMaquinaVirtual *maqVirt);
+void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo, unsigned int *tamanioCode);
+void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode);
 void setFlags(ETMaquinaVirtual *maqVirt, bool n, bool z, bool c, bool o);
 void mvError(ETMaquinaVirtual *maqVirt, char *mensaje);
 void guardarResult(ETMaquinaVirtual *maqVirt, int tipoOp, int valorOp, int result);

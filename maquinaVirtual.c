@@ -44,10 +44,9 @@ void setFlags(ETMaquinaVirtual *maqVirt, bool n, bool z, bool c, bool o) {
     maqVirt->registros[REGCC] = cc;
 }
 
-void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
+void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo, unsigned int *tamanioCode) {
     FILE *arch = NULL;
     uint8_t header[8];
-    unsigned int tamanioCode;
     int i;
 
     arch = fopen(nombreArchivo,"rb");
@@ -76,17 +75,17 @@ void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
         exit(1);
     }
 
-    tamanioCode = header[6] << 8 | header[7];
+    *tamanioCode = header[6] << 8 | header[7];
 
-    if (tamanioCode > DIMMEMORIA) {
+    if (*tamanioCode > DIMMEMORIA) {
         mvError(maqVirt, "Segmento de codigo no cabe en memoria\n");
         fclose(arch);
         exit(1);
     }
 
     /// Inicializar tabla de segmentos
-    maqVirt->segTabla[0] = tamanioCode;
-    maqVirt->segTabla[1] = (tamanioCode << 16) | (DIMMEMORIA - tamanioCode);
+    maqVirt->segTabla[0] = *tamanioCode;
+    maqVirt->segTabla[1] = (*tamanioCode << 16) | (DIMMEMORIA - *tamanioCode);
 
     /// Inicializar CS y DS
     /// Dir logica: 2 bytes cod. segmento, 2 bytes offset
@@ -97,12 +96,11 @@ void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
     maqVirt->registros[REGIP] = maqVirt->registros[REGCS];
 
     /// Cargar codigo/datos en memoria
-    /// Header como offset
-    i = 8;
-    while (i-8 < DIMMEMORIA && fread(maqVirt->memoria + i, 1, 1, arch) == 1)
+    i = 0;
+    while (i < DIMMEMORIA && fread(&maqVirt->memoria[i], 1, 1, arch) == 1)
         i++;
 
-    if (i-8 == DIMMEMORIA) {
+    if (i == DIMMEMORIA) {
         mvError(maqVirt, "Desbordamiento de memoria\n");
         fclose(arch);
         exit(1);
@@ -111,46 +109,71 @@ void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
     fclose(arch);
 }
 
-void mvEjecutar(ETMaquinaVirtual *maqVirt) {
-    unsigned int dirFisica, dirFisicaTem, lengInstr;
+void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
+    unsigned int dirFisica, dirFisicaTem, lengInstr, baseCode;
 
     maqVirt->running = true;
+    baseCode = cambioLogicFisic(maqVirt, maqVirt->registros[REGCS], sizeof(maqVirt->registros[0]));
+
+    /*printf("MEMORIA[0-10]: ");
+    for (int i = 0; i < 11; i++)
+        printf("%02X ", (uint8_t)leerByteDirFisica(maqVirt, i));
+
+    printf("\n");*/
+
+    if(baseCode == -1)
+        mvError(maqVirt, "Fallo de segmento");
+
+    //for(int i = 0; i < 50; i++)
+    //  printf("MEMORIA[%d]: %02X\n", i, (uint8_t)maqVirt->memoria[i]);
 
     while (maqVirt->running) {
+        //printf("MEMORIA[IP = %d]: %02X\n", maqVirt->registros[REGIP], (uint8_t)maqVirt->memoria[maqVirt->registros[REGIP]]);
         if (maqVirt->registros[REGIP] == 0xFFFFFFFF) /// STOP
             maqVirt->running = false;
-        else{
-            dirFisica = cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], sizeof(maqVirt->registros[0]));
+        else
+            if ((uint32_t)maqVirt->registros[REGIP] >= baseCode + tamanioCode)
+                mvError(maqVirt, "Fallo de segmento (falta instruccion STOP)");
+            else {
+                dirFisica = cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], 0);
 
-            if (dirFisica == -1)
-                mvError(maqVirt, "Fallo de segmento");
-            else
-            {
-                dirFisicaTem = dirFisica;
+                if (dirFisica == -1) //ENTRA ACA CUANDO STOP
+                    mvError(maqVirt, "Fallo de segmento");
+                else
+                {
+                    dirFisicaTem = dirFisica;
 
-                /// Actualiza OPC, OP1 y OP2
-                leerInstruccion(maqVirt, &dirFisicaTem);
+                    /// Actualiza OPC, OP1 y OP2
+                    leerInstruccion(maqVirt, &dirFisicaTem);
 
-                /// Modo desensamblar: Muestra la instruccion
-                if (maqVirt->disassembler)
-                    mostrarInstruccion(maqVirt, dirFisica, dirFisicaTem);
+                    /// Modo desensamblar: Muestra la instruccion
+                    if (maqVirt->disassembler)
+                        mostrarInstruccion(maqVirt, dirFisica, dirFisicaTem);
 
-                /// Actualizamos IP
-                lengInstr = dirFisicaTem - dirFisica;
-                maqVirt->registros[REGIP] += lengInstr;
+                    /// Actualizamos IP
+                    lengInstr = dirFisicaTem - dirFisica;
+                    //printf("IP actual: %d\n", maqVirt->registros[REGIP]);
+                    //printf("\nMEMORIA[IP actual]: %02X", (uint8_t)maqVirt->memoria[cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], sizeof(maqVirt->registros[REGIP]))]);
+                    maqVirt->registros[REGIP] += lengInstr;
+                    //printf("IP actualizada: %d\n", maqVirt->registros[REGIP]);
+                    //printf("\nMEMORIA[IP actualizada]: %02X", (uint8_t)maqVirt->memoria[cambioLogicFisic(maqVirt, maqVirt->registros[REGIP]+2, sizeof(maqVirt->registros[REGIP]))]);
 
-                ejecutarInstruccion(maqVirt);
+                    //printf("\n MEMORIA[6] AE: %02X\n", (uint8_t)maqVirt->memoria[6]);
+                    ejecutarInstruccion(maqVirt);
+                    //printf("\n MEMORIA[6] DE: %02X\n", (uint8_t)maqVirt->memoria[6]);
+                    //printf("Luego de ejecucion: %d\n", maqVirt->registros[REGIP]);
+                }
             }
-        }
     }
 }
 
 
-void guardarResult(ETMaquinaVirtual *maqVirt, int tipoOp, int valorOp, int result) {
+void guardarResult(ETMaquinaVirtual *maqVirt, int tipoOp, int op, int result) {
     int dest;
 
+    //printf("\nop: %X\n", op);
     if(tipoOp != OPIMM) {
-        dest = operandoDest(maqVirt, tipoOp, valorOp);
+        dest = operandoDest(maqVirt, tipoOp, op);
 
         if(tipoOp == OPMEM)
             writeMem(maqVirt, dest, result, sizeof(maqVirt->registros[0]));

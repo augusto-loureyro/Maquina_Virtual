@@ -3,161 +3,169 @@
 void ejecutarInstruccion(ETMaquinaVirtual *maqVirt) {
     int valA, valB, tipoOpA, tipoOpB, result;
 
+    //printf("OP1: %X  ", maqVirt->registros[REGOP1]);
+    //printf("OP2: %X\n", maqVirt->registros[REGOP2]);
+
     tipoOpA = (maqVirt->registros[REGOP1] >> 24) & 0xFF;
-    tipoOpB = (maqVirt->registros[REGOP1] >> 24) & 0xFF;
+    tipoOpB = (maqVirt->registros[REGOP2] >> 24) & 0xFF;
     /// Obtener los valores almacenados en los operandos
     if(tipoOpA != OPNONE)
         valA = obtenerValorOperando(maqVirt, tipoOpA, maqVirt->registros[REGOP1]);
     if(tipoOpB != OPNONE)
         valB = obtenerValorOperando(maqVirt, tipoOpB, maqVirt->registros[REGOP2]);
 
+    //printf("tipos: %X  %X\nvalores: %X  %X\n", tipoOpA, tipoOpB, valA, valB);
+
     /// Si hubo fallo de segmento (en readMem)
     if (!maqVirt->running)
         return;
 
+    //printf("\n MEMORIA[6] E: %02X\n", (uint8_t)maqVirt->memoria[6]);
+
     switch (maqVirt->registros[REGOPC]) {
         /// 1 operando
-        case 0x00: /// SYS
+        case SYS:
             llamadaSistema(maqVirt, valA);
             break;
-        case 0x01: /// JMP
+        case JMP:
             maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x02: /// JP
+        case JP:
             if (((maqVirt->registros[REGCC] & NMASK) == 0) && ((maqVirt->registros[REGCC] & ZMASK) == 0))
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x03: /// JN
+        case JN:
             if ((maqVirt->registros[REGCC] & NMASK) != 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x04: /// JZ
+        case JZ:
             if ((maqVirt->registros[REGCC] & ZMASK) != 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x05: /// JC
+        case JC:
             if ((maqVirt->registros[REGCC] & CMASK) != 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x06: /// JV
+        case JV:
             if ((maqVirt->registros[REGCC] & OMASK) != 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x07: /// JNP
+        case JNP:
             if ((maqVirt->registros[REGCC] & NMASK) != 0 || (maqVirt->registros[REGCC] & ZMASK) != 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x08: /// JNN
+        case JNN:
             if ((maqVirt->registros[REGCC] & NMASK) == 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x09: /// JNZ
+        case JNZ:
             if ((maqVirt->registros[REGCC] & ZMASK) == 0)
                 maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
             break;
-        case 0x0A: /// NOT
+        case NOT:
             result = ~valA;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
         /// 0 operandos
-        case 0x0F: /// STOP
+        case STOP:
             maqVirt->registros[REGIP] = 0xFFFFFFFF;
             break;
         /// 2 Operandos
-        case 0x10: /// MOV
+        case MOV:
             result = valB;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result); //envio operando codificado (NO su valor)
+            //printf("\n MEMORIA[6] E: %02X\n", (uint8_t)maqVirt->memoria[6]);
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
-        case 0x11: /// ADD
+        case ADD:
             result = valA + valB;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, result < valA, verificarOverflow(valA,valB,result,'+'));
             break;
-        case 0x12: /// SUB
+        case SUB:
             result = valA - valB;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, (valA + ~valB + 1) < valA || (~valB + 1) < ~valB,
                      verificarOverflow(valA,valB,result,'-'));
             break;
-        case 0x13: { /// MUL
+        case MUL: {
             long long int prod = (long long int)valA * (long long int)valB;
             result = (int)prod;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, prod > 0xFFFFFFFF, verificarOverflow(valA,valB,result,'*'));
             break;
         }
-        case 0x14: /// DIV
+        case DIV:
             if (valB == 0) {
                 mvError(maqVirt, "Division por cero");
             }else{
                 result = valA / valB;
                 maqVirt->registros[REGAC] = valA % valB;
-                guardarResult(maqVirt, tipoOpA, valA, result);
+                guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
                 setFlags(maqVirt, result < 0, result == 0, false, false);
             }
             break;
-        case 0x15: /// CMP
+        case CMP:
             result = valA - valB;
             setFlags(maqVirt, result < 0, result == 0, valA >= valB, verificarOverflow(valA,valB,result,'-'));
             break;
-        case 0x16: /// AND
+        case AND:
             result = valA & valB;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
-        case 0x17: /// OR
+        case OR:
             result = valA | valB;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
-        case 0x18: /// XOR
+        case XOR:
             result = valA ^ valB;
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
-        case 0x19: /// SWAP
-            guardarResult(maqVirt, tipoOpA, valA, valB);
-            guardarResult(maqVirt, tipoOpB, valB, valA);
+        case SWAP:
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], valB);
+            guardarResult(maqVirt, tipoOpB, maqVirt->registros[REGOP2], valA);
             result = valA ^ valB;
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
-        case 0x1A: /// SHL
+        case SHL:
             if (valB > 0 && valB < 32) {
                 result = valA << valB;
-                guardarResult(maqVirt, tipoOpA, valA, result);
+                guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
                 setFlags(maqVirt, result < 0, result == 0, false, valA < 0);
             }
             break;
-        case 0x1B: /// SHR
+        case SHR:
             if (valB > 0 && valB < 32) {
                 result = (unsigned int)valA >> valB;
-                guardarResult(maqVirt, tipoOpA, valA, result);
+                guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
                 setFlags(maqVirt, result < 0, result == 0, false, valA < 0);
             }
             break;
-        case 0x1C: /// SAR (Shift Aritmetico)
+        case SAR: /// Shift Aritmetico
             if (valB > 0 && valB < 32) {
                 result = valA >> valB;
-                guardarResult(maqVirt, tipoOpA, valA, result);
+                guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
                 setFlags(maqVirt, result < 0, result == 0, valA >> (valB - 1) & 1, false);
             }
             break;
-        case 0x1D: /// LDL
+        case LDL:
             result = (valA & 0xFFFF0000) | (valB & 0xFFFF);
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             break;
-        case 0x1E: /// LDH
+        case LDH:
             result = (valA & 0x0000FFFF) | (valB << 16);
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             break;
-        case 0x1F: /// RND
+        case RND:
             if (valB >= 0)
                 result = rand() % (valB + 1);
             else
                 result = -(rand() % (-valB + 1));
-            guardarResult(maqVirt, tipoOpA, valA, result);
+            guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result);
             break;
         default:
             mvError(maqVirt, "Instruccion invalida");

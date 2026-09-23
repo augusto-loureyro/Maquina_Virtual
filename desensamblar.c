@@ -3,35 +3,35 @@
 
 char* mnemonico(int code) {
     switch(code) {
-        case 0x00: return "SYS";
-        case 0x01: return "JMP";
-        case 0x02: return "JP";
-        case 0x03: return "JN";
-        case 0x04: return "JZ";
-        case 0x05: return "JC";
-        case 0x06: return "JV";
-        case 0x07: return "JNP";
-        case 0x08: return "JNN";
-        case 0x09: return "JNZ";
-        case 0x0A: return "NOT";
-        case 0x0F: return "STOP";
-        case 0x10: return "MOV";
-        case 0x11: return "ADD";
-        case 0x12: return "SUB";
-        case 0x13: return "MUL";
-        case 0x14: return "DIV";
-        case 0x15: return "CMP";
-        case 0x16: return "AND";
-        case 0x17: return "OR";
-        case 0x18: return "XOR";
-        case 0x19: return "SWAP";
-        case 0x1A: return "SHL";
-        case 0x1B: return "SHR";
-        case 0x1C: return "SAR";
-        case 0x1D: return "LDL";
-        case 0x1E: return "LDH";
-        case 0x1F: return "RND";
-        default:   return "XXX";
+        case SYS: return "SYS";
+        case JMP: return "JMP";
+        case JP: return "JP";
+        case JN: return "JN";
+        case JZ: return "JZ";
+        case JC: return "JC";
+        case JV: return "JV";
+        case JNP: return "JNP";
+        case JNN: return "JNN";
+        case JNZ: return "JNZ";
+        case NOT: return "NOT";
+        case STOP: return "STOP";
+        case MOV: return "MOV";
+        case ADD: return "ADD";
+        case SUB: return "SUB";
+        case MUL: return "MUL";
+        case DIV: return "DIV";
+        case CMP: return "CMP";
+        case AND: return "AND";
+        case OR: return "OR";
+        case XOR: return "XOR";
+        case SWAP: return "SWAP";
+        case SHL: return "SHL";
+        case SHR: return "SHR";
+        case SAR: return "SAR";
+        case LDL: return "LDL";
+        case LDH: return "LDH";
+        case RND: return "RND";
+        default: return "XXX";
     }
 }
 
@@ -63,22 +63,25 @@ void armarOperando(char *operando, ETMaquinaVirtual *maqVirt, int op) {
     int desplazamiento, tipoOp;
 
     tipoOp = (op >> 24) & 0xFF;
+    //printf("%X ", op);
+    //printf("%X ", tipoOp);
 
     if (tipoOp == OPREG)
         sprintf(operando, "%s", nombreRegistro(operandoDest(maqVirt, tipoOp, op)));
     else
         if (tipoOp == OPIMM)
-            sprintf(operando, "%02X", operandoDest(maqVirt, tipoOp, op));
+            sprintf(operando, "%d", operandoDest(maqVirt, tipoOp, op));
         else {
             desplazamiento = (op >> 8) & 0xFFFF;
+            //printf("%d", desplazamiento);
 
-            if (desplazamiento == 0)
-                sprintf(operando, "[%s]", nombreRegistro(operandoDest(maqVirt, OPREG, op)));
+            if (desplazamiento < 0)
+                sprintf(operando, "[%s-%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
             else
-                if (desplazamiento > 0)
-                    sprintf(operando, "[%s+%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
+                if(strcmp(nombreRegistro(operandoDest(maqVirt, OPREG, op)), "DS") == 0)
+                    sprintf(operando, "[%d]", desplazamiento);
                 else
-                    sprintf(operando, "[%s-%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
+                    sprintf(operando, "[%s+%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
         }
 }
 
@@ -88,22 +91,22 @@ void mostrarInstruccion(ETMaquinaVirtual *maqVirt, unsigned int dirFisicaInc, un
     int i, pos = 0;
 
     for(i = 0; dirFisicaInc + i < dirFisicaFin; i++)
-        pos += sprintf(&byteHexa[pos], "%02X ", leerByteDirFisica(maqVirt, dirFisicaInc + i)); // Retorna cant caracteres escritos ("XX " => 3)
+        pos += sprintf(&byteHexa[pos], "%02X ", (uint8_t)leerByteDirFisica(maqVirt, dirFisicaInc + i)); /// Retorna cant caracteres escritos ("XX " => 3)
 
-    if (maqVirt->memoria[REGOP1] != 0) {
-        if (maqVirt->memoria[REGOP2] != 0)
-            armarOperando(opB, maqVirt, maqVirt->memoria[REGOP2]);
-        armarOperando(opA, maqVirt, maqVirt->memoria[REGOP1]);
+    if (maqVirt->registros[REGOP1] != 0) {
+        if (maqVirt->registros[REGOP2] != 0)
+            armarOperando(opB, maqVirt, maqVirt->registros[REGOP2]);
+        armarOperando(opA, maqVirt, maqVirt->registros[REGOP1]);
     }
 
     /// Imprimir formato: [0000] XX XX XX XX | MNEM OPA, OPB
-    printf("[%04X] %-14s  | %-4s ", dirFisicaInc, byteHexa, mnemonico(maqVirt->registros[REGOPC]));
+    printf("[%04X] %-25s  |  %-4s ", dirFisicaInc, byteHexa, mnemonico(maqVirt->registros[REGOPC]));
 
-    if (maqVirt->memoria[REGOP1] != 0) {
-        if (maqVirt->memoria[REGOP2] != 0)
-            printf("%s, %s", opA, opB);
+    if (maqVirt->registros[REGOP1] != 0) {
+        if (maqVirt->registros[REGOP2] != 0)
+            printf("%-s, %-s", opA, opB);
         else
-            printf("%s", opA);
+            printf("%-s", opA);
     }
 
     printf("\n");

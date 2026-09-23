@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "traductor.h"
 #include "memoriaPrincipal.h"
+#include "instruccion.h"
 
 /// Muestra la instruccion en la consola.
 char* mnemonico(int code);

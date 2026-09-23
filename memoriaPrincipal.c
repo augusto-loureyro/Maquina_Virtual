@@ -1,7 +1,7 @@
 #include "memoriaPrincipal.h"
 
 unsigned int cambioLogicFisic(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, unsigned int tamBytes) {
-    unsigned int segmento, dirFisica, numSeg = dirLogica >> 16;
+    unsigned int segmento, dimSeg, dirFisica, numSeg = dirLogica >> 16;
     int baseSeg, despla = dirLogica & 0xFFFF;
 
     if (numSeg < 0 || numSeg > SEGMENTOS) ///Segmento inexistente
@@ -13,10 +13,10 @@ unsigned int cambioLogicFisic(ETMaquinaVirtual *maqVirt, unsigned int dirLogica,
         return -1;
 
     baseSeg = segmento >> 16;
-
+    dimSeg = segmento & 0xFFFF;
     dirFisica = baseSeg + despla;
 
-    if (dirFisica < baseSeg || dirFisica > baseSeg + (segmento & 0xFFFF) - tamBytes) /// Desbordamiento de segmento
+    if (tamBytes > dimSeg || dirFisica < baseSeg || dirFisica - baseSeg > dimSeg - tamBytes) /// Desbordamiento de segmento
         return -1;
     else
         return dirFisica;
@@ -48,9 +48,8 @@ int readMem(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, unsigned int tamB
         maqVirt->registros[REGMAR] = dirFisica;
 
         /// Lectura en Big Endian
-        for (i = 0; i < tamBytes; i++) {
+        for (i = 0; i < tamBytes; i++)
             valor = (valor << 8) | (uint8_t)maqVirt->memoria[dirFisica + i];
-        }
 
         /*valor = (maqVirt->memoria[dirFisica] << 24) |
                 (maqVirt->memoria[dirFisica + 1] << 16) |
