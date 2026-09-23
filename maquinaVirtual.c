@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "maquinaVirtual.h"
 #include "traductor.h"
 #include "memoriaPrincipal.h"
@@ -5,36 +6,32 @@
 #include "desensamblar.h"
 
 
-void mvInic(ETMaquinaVirtual *maqVirt, bool modoDisamble) {
+void mvInic(ETMaquinaVirtual *maqVirt, bool disassembler) {
     int i;
 
     /// Se inicializa la memoria con 0 para que no haya trash.
     memset(&(maqVirt->memoria), 0, sizeof(maqVirt->memoria));
 
-    /// Se inicializan variables de control
-    maqVirt->modoDisamble = modoDisamble;
-    maqVirt->error = false;
+    maqVirt->disassembler = disassembler;
     maqVirt->running = false;
 
-    /// Inicializar los 32 registros
+    /// Inicializar los registros
     for (i = 0; i < REGISTROS; i++)
         maqVirt->registros[i] = 0;
 
-    /// Inicializar las tablas de los 8 segmentos
-    for (i = 0; i < SEGMENTOS; i++) {
-        maqVirt->segTabla[i].base = 0xFFFF;
-        maqVirt->segTabla[i].dim = 0xFFFF;
-    }
+    /// Inicializar la tabla de segmentos
+    for (i = 0; i < SEGMENTOS; i++)
+        maqVirt->segTabla[i] = 0xFFFFFFFF;
 }
 
-void mvError(ETMaquinaVirtual *maqVirt,char *mensaje) {
+void mvError(ETMaquinaVirtual *maqVirt, char *mensaje) {
     printf("ERROR: %s\n", mensaje);
-    maqVirt->error = true;
     maqVirt->running = false;
 }
 
 void setFlags(ETMaquinaVirtual *maqVirt, bool n, bool z, bool c, bool o) {
     int cc = 0;
+
     if(n)
         cc |= NMASK;
     if(z)
@@ -43,118 +40,146 @@ void setFlags(ETMaquinaVirtual *maqVirt, bool n, bool z, bool c, bool o) {
         cc |= CMASK;
     if(o)
         cc |= OMASK;
+
     maqVirt->registros[REGCC] = cc;
 }
 
-bool cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo) {
+void cargarArchivo(ETMaquinaVirtual *maqVirt, char *nombreArchivo, unsigned int *tamanioCode) {
     FILE *arch = NULL;
     uint8_t header[8];
-    int tamanioCode;
-    bool flag = false;
+    int i;
 
     arch = fopen(nombreArchivo,"rb");
-    if (arch != NULL) {
-        /// Leer la cabecera
-        if (fread(header, sizeof(header), 1, arch) != 1) {
-            printf("Cabecera invalida\n");
-        }else{
-            if (memcmp(header, "VMX26", 5) != 0) { ///memcmp. Devuelve 0 si ambos bloques de memoria son exactamente iguales en su contenido.
-                printf("Identificador de programa invalido\n");
-            }else
-                if (header[5] != 1)
-                    printf("Version invalida\n");
-                else{
-                    /// ShiftL 8 bits del  primero y concateno con los del segundo
-                    tamanioCode = (header[6] << 8) | header[7];
 
-                    /// Inicializar tabla de segmentos
-                    /// Segmento de Codigo
-                    maqVirt->segTabla[0].base = 0;
-                    maqVirt->segTabla[0].dim = tamanioCode;
+    if (arch == NULL) {
+        mvError(maqVirt, "Archivo no encontrado\n");
+        exit(1);
+    }
 
-                    /// Segmento de Datos
-                    maqVirt->segTabla[1].base = tamanioCode;
-                    maqVirt->segTabla[1].dim = DIMMEMORIA - tamanioCode;
-
-                    /// Inicializar CS y DS
-                    maqVirt->registros[REGCS] = 0x00000000;
-                    maqVirt->registros[REGDS] = 0x00010000;
-
-                    /// IP apunta al inicio del segmento de codigo
-                    maqVirt->registros[REGIP] = maqVirt->registros[REGCS];
-
-                    /// Cargar codigo en memoria fisica
-                    /// Posicionarse justo despues del header de 8 bytes
-                    fseek(arch, 8, SEEK_SET);
-
-                    /// Cargar solo el codigo/datos en la memoria
-                    fread(maqVirt->memoria, 1, DIMMEMORIA, arch);
-                    fclose(arch);
-                    flag = true;
-                }
-        }
+    /// Leer la cabecera
+    if (fread(header, sizeof(header), 1, arch) != 1) {
+        mvError(maqVirt, "Cabecera invalida\n");
         fclose(arch);
-        return flag;
-
+        exit(1);
     }
+
+    if (memcmp(header, "VMX26", 5) != 0) { // memcmp devuelve 0 si ambos bloques de memoria son exactamente iguales en su contenido
+        mvError(maqVirt, "Identificador de programa invalido\n");
+        fclose(arch);
+        exit(1);
+    }
+
+    if (header[5] != 1) {
+        mvError(maqVirt, "Version invalida\n");
+        fclose(arch);
+        exit(1);
+    }
+
+    *tamanioCode = header[6] << 8 | header[7];
+
+    if (*tamanioCode > DIMMEMORIA) {
+        mvError(maqVirt, "Segmento de codigo no cabe en memoria\n");
+        fclose(arch);
+        exit(1);
+    }
+
+    /// Inicializar tabla de segmentos
+    maqVirt->segTabla[0] = *tamanioCode;
+    maqVirt->segTabla[1] = (*tamanioCode << 16) | (DIMMEMORIA - *tamanioCode);
+
+    /// Inicializar CS y DS
+    /// Dir logica: 2 bytes cod. segmento, 2 bytes offset
+    maqVirt->registros[REGCS] = 0x00000000;
+    maqVirt->registros[REGDS] = 0x00010000;
+
+    /// IP apunta al inicio del segmento de codigo
+    maqVirt->registros[REGIP] = maqVirt->registros[REGCS];
+
+    /// Cargar codigo/datos en memoria
+    i = 0;
+    while (i < DIMMEMORIA && fread(&maqVirt->memoria[i], 1, 1, arch) == 1)
+        i++;
+
+    if (i == DIMMEMORIA) {
+        mvError(maqVirt, "Desbordamiento de memoria\n");
+        fclose(arch);
+        exit(1);
+    }
+
+    fclose(arch);
 }
 
-void mvEjecutar(ETMaquinaVirtual *maqVirt) {
+void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
+    unsigned int dirFisica, dirFisicaTem, lengInstr, baseCode;
+
     maqVirt->running = true;
-    int32_t dirLogica, dirFisica, dirFisicaTem, lengInstr;
-    TRInstruction inst;
+    baseCode = cambioLogicFisic(maqVirt, maqVirt->registros[REGCS], sizeof(maqVirt->registros[0]));
 
-    while (maqVirt->running && !(maqVirt->error)) {
-        if (maqVirt->registros[REGIP] == 0xFFFFFFFF) {
-            maqVirt->running = false; /// Detiene ejecucion.
-        }else{
-            dirLogica = maqVirt->registros[REGIP];
-            dirFisica = cambioLogicFisic(maqVirt, dirLogica);
+    /*printf("MEMORIA[0-10]: ");
+    for (int i = 0; i < 11; i++)
+        printf("%02X ", (uint8_t)leerByteDirFisica(maqVirt, i));
 
-            if (dirFisica >= 0) {
-                dirFisicaTem = dirFisica;
+    printf("\n");*/
 
-                /// Leemos la siguiente instruccion desde la memoria fisica
-                inst = leerInstruccion(maqVirt, &dirFisicaTem);
+    if(baseCode == -1)
+        mvError(maqVirt, "Fallo de segmento");
 
-                /// Actualizamos IP logico
-                lengInstr = dirFisicaTem - dirFisica;
-                maqVirt->registros[REGIP] += lengInstr;
+    //for(int i = 0; i < 50; i++)
+    //  printf("MEMORIA[%d]: %02X\n", i, (uint8_t)maqVirt->memoria[i]);
 
-                /// Guardamos los registros OPA y OPB
-                maqVirt->registros[REGOPC] = inst.operacion;
+    while (maqVirt->running) {
+        //printf("MEMORIA[IP = %d]: %02X\n", maqVirt->registros[REGIP], (uint8_t)maqVirt->memoria[maqVirt->registros[REGIP]]);
+        if (maqVirt->registros[REGIP] == 0xFFFFFFFF) /// STOP
+            maqVirt->running = false;
+        else
+            if ((uint32_t)maqVirt->registros[REGIP] >= baseCode + tamanioCode)
+                mvError(maqVirt, "Fallo de segmento (falta instruccion STOP)");
+            else {
+                dirFisica = cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], 0);
 
-                maqVirt->registros[REGOP1] = (inst.tipoOpA << 24) | (inst.opAValor & 0xFFFFFF);
+                if (dirFisica == -1) //ENTRA ACA CUANDO STOP
+                    mvError(maqVirt, "Fallo de segmento");
+                else
+                {
+                    dirFisicaTem = dirFisica;
 
-                maqVirt->registros[REGOP2] = (inst.tipoOpB << 24) | (inst.opBValor & 0xFFFFFF);
+                    /// Actualiza OPC, OP1 y OP2
+                    leerInstruccion(maqVirt, &dirFisicaTem);
 
+                    /// Modo desensamblar: Muestra la instruccion
+                    if (maqVirt->disassembler)
+                        mostrarInstruccion(maqVirt, dirFisica, dirFisicaTem);
 
-                /// Ejecutamos la instruccion
-                ejecutarInstruction(maqVirt, inst);
-                /// Si la instruccion fallo internamente, rompemos el ciclo
-                if (!maqVirt->running || maqVirt->error) {
-                    break;
+                    /// Actualizamos IP
+                    lengInstr = dirFisicaTem - dirFisica;
+                    //printf("IP actual: %d\n", maqVirt->registros[REGIP]);
+                    //printf("\nMEMORIA[IP actual]: %02X", (uint8_t)maqVirt->memoria[cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], sizeof(maqVirt->registros[REGIP]))]);
+                    maqVirt->registros[REGIP] += lengInstr;
+                    //printf("IP actualizada: %d\n", maqVirt->registros[REGIP]);
+                    //printf("\nMEMORIA[IP actualizada]: %02X", (uint8_t)maqVirt->memoria[cambioLogicFisic(maqVirt, maqVirt->registros[REGIP]+2, sizeof(maqVirt->registros[REGIP]))]);
+
+                    //printf("\n MEMORIA[6] AE: %02X\n", (uint8_t)maqVirt->memoria[6]);
+                    ejecutarInstruccion(maqVirt);
+                    //printf("\n MEMORIA[6] DE: %02X\n", (uint8_t)maqVirt->memoria[6]);
+                    //printf("Luego de ejecucion: %d\n", maqVirt->registros[REGIP]);
                 }
-
-                /// Modo desensamblar: Muestra la instruccion
-                if (maqVirt->modoDisamble && !maqVirt->error)
-                    mostrarInstruccion(maqVirt, inst, dirFisica, dirFisicaTem);
-
-            }else
-                mvError(maqVirt, "Fallo de segmento (fetch instruccion).");
-        }
+            }
     }
 }
 
 
+void guardarResult(ETMaquinaVirtual *maqVirt, int tipoOp, int op, int result) {
+    int dest;
 
-void guardarResult(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp, int32_t result) {
-    int32_t dest = operandoDest(maqVirt, tipoOp, valorOp);
+    //printf("\nop: %X\n", op);
+    if(tipoOp != OPIMM) {
+        dest = operandoDest(maqVirt, tipoOp, op);
 
-    if(tipoOp == OPMEM)
-        writeMem(maqVirt, dest, result);
-    else
-        maqVirt->registros[dest] = result;
+        if(tipoOp == OPMEM)
+            writeMem(maqVirt, dest, result, sizeof(maqVirt->registros[0]));
+        else
+            maqVirt->registros[dest] = result;
+    }
 }
 
 

@@ -1,176 +1,169 @@
 #include "traductor.h"
 #include "memoriaPrincipal.h"
 
+void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
+    uint8_t byte = (uint8_t)leerByteDirFisica(maqVirt, *dirFisica);
+    uint8_t bit7y6 = byte >> 6;
+    uint8_t bit5y4 = byte >> 4 & 0x03; /// XX01 & 0011
+    uint8_t bit4a0 = byte & 0x1F;
+    //printf("%X %X %X %X\n", byte, bit7y6, bit5y4, bit4a0);
 
-int32_t obtenerValorOperando(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp){
-    int32_t dirLogica;
+    (*dirFisica)++;
+    maqVirt->registros[REGOPC] = bit4a0;
 
+    if((bit4a0 & 0xF0) == 0) { /// bit 4 en 0 es codigo operacion para 0/1 operandos
+        maqVirt->registros[REGOP2] = 0;
+        /// 0 operandos
+        if(bit7y6 == 0)
+            maqVirt->registros[REGOP1] = 0;
+        /// 1 operando
+        else
+            maqVirt->registros[REGOP1] = bit7y6 << 24 | leerOperando(maqVirt, dirFisica, bit7y6);
+    }else {
+        /// 2 operandos
+        maqVirt->registros[REGOP2] = bit7y6 << 24 | leerOperando(maqVirt, dirFisica, bit7y6);
+        maqVirt->registros[REGOP1] = bit5y4 << 24 | leerOperando(maqVirt, dirFisica, bit5y4);
+    }
+
+    //printf("%X ", maqVirt->registros[REGOP2]);
+    //printf("%X \n", maqVirt->registros[REGOP1]);
+}
+
+int leerOperando(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica, unsigned int bytesALeer) {
+    int i, operando = 0;
+    uint8_t byte;
+
+    for (i = 0; i < bytesALeer; i++) {
+        byte = leerByteDirFisica(maqVirt, *dirFisica);
+        (*dirFisica)++;
+        operando = (operando << 8) | byte;
+    }
+
+    return operando;
+}
+
+int obtenerValorOperando(ETMaquinaVirtual *maqVirt, int tipoOp, int op) {
     if(tipoOp == OPREG)
         /// Devuelve el contenido almacenado en el registro (ej: si es DS, devuelve 0x00010000)
-        return maqVirt->registros[valorOp & 0x1F];  ///Los 5 bits menos sigficativos representan el Registro
+        return maqVirt->registros[op & 0x1F];  ///Los 5 bits menos sigficativos representan el Registro
     else
-        if(tipoOp == OPMEM){
-            /// Calcula la dirección logica y lee de la memoria RAM
-            dirLogica = operandoDest(maqVirt, tipoOp, valorOp);
-            return readMem(maqVirt, dirLogica);
-        }else
-            /// Inmediato (OPIMM)
-            return valorOp;
+        if(tipoOp == OPMEM)
+            /// Lee de la memoria RAM en la direccion logica del operando
+            return readMem(maqVirt, operandoDest(maqVirt, tipoOp, op), sizeof(maqVirt->registros[0]));
+        else
+            /// Inmediato
+            return op & 0xFFFF;
 
 }
 
-TRInstruction leerInstruccion(ETMaquinaVirtual *maqVirt, int32_t *dirFisica) {
-    TRInstruction instancia = {0, 0, 0, 0, 0, 0};
-    uint8_t byte = siguienteByte(maqVirt, dirFisica);
-    uint8_t opB = byte >> 6;
-    uint8_t opA = (byte >> 4) & 0x03; /// XX01 & 0011
-    uint8_t oper = byte & 0x1F;
-    uint8_t quinto = (byte >> 4) & 0x01;
+int operandoDest(ETMaquinaVirtual *maqVirt, int tipoOp, int op) {
+    unsigned int registro, dirLogica;
+    int desplaz;
 
-    if(quinto == 0){
-        if(opB == 0)
-            /// 0 operandos
-            instancia.cantOperand = 0;
-        else{
-            /// 1 operando
-            instancia.cantOperand = 1;
-            instancia.tipoOpA = opB; /// En 1 operando, opA ocupa los primeros 2 bits
-        }
-    }else{
-        /// 2 operandos
-        instancia.cantOperand = 2;
-        instancia.tipoOpB = opB;
-        instancia.tipoOpA = opA;
-    }
-    instancia.operacion = oper; ///Quinto
-
-    if(instancia.cantOperand == 2){/// Leer operando B primero
-        instancia.opBValor = leerOperando(maqVirt, dirFisica, instancia.tipoOpB);
-        instancia.opAValor = leerOperando(maqVirt, dirFisica, instancia.tipoOpA);
+    if(tipoOp == OPREG) {
+        /// Devuelve num de registro
+        return op & 0x1F;
     }else
-        if(instancia.cantOperand == 1)
-            instancia.opAValor = leerOperando(maqVirt, dirFisica, instancia.tipoOpA);
-
-    return instancia;
-}
-
-int32_t leerOperando(ETMaquinaVirtual *maqVirt, int32_t *dirFisica, uint8_t tipoOp) {
-    int bytesALeer = 0, i;
-    int32_t concat = 0, byte;
-
-    /// Determinar cuantos bytes necesita el operando
-    switch (tipoOp) {
-        case OPNONE:
-            bytesALeer = 0;
-            break;
-        case OPREG:
-            bytesALeer = 1;
-            break;
-        case OPIMM:
-            bytesALeer = 2;
-            break;
-        case OPMEM:
-            bytesALeer = 3;
-            break;
-        default:
-            bytesALeer = 0;
-    }
-
-    /// Leer secuencialmente los N bytes
-    for(i = 0; i < bytesALeer; i++){
-        byte = siguienteByte(maqVirt, dirFisica);
-        concat = (concat << 8) | byte;
-    }
-    return concat;
-}
-
-
-
-int32_t operandoDest(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp) {
-    uint8_t registro;
-    short desplaz;
-    int32_t dirLogica;
-
-    if(tipoOp == OPREG){
-        return valorOp & 0x1F;
-    }else
-        if(tipoOp == OPMEM){
-            desplaz = (short)(valorOp >> 8);
-            registro = valorOp & 0x1F;
-            dirLogica = maqVirt->registros[registro]; /// DS
-            return dirLogica + desplaz;
+        if(tipoOp == OPMEM) {
+            /// Interpreta y devuelve direccion logica
+            desplaz = (op >> 8) & 0xFFFF;
+            registro = op & 0x1F;
+            dirLogica = maqVirt->registros[registro] + desplaz;
+            //printf("\nregistro %d  desplazamiento %d  dirLogica %X\n", registro, desplaz, dirLogica);
+            return dirLogica;
         }else
-            return 0;
+            /// Inmediato
+            return op & 0xFFFF;
 }
 
-
-void llamadaSistema(ETMaquinaVirtual *maqVirt, int32_t tipoLlamada) {
-    int32_t dirLogica = maqVirt->registros[REGEDX];
-    int32_t regECX    = maqVirt->registros[REGECX];
-    int32_t regEAX    = maqVirt->registros[REGEAX];
-    int32_t dirFisica, valor;
-    int i;
-
+void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
+    unsigned int dirLogica = (unsigned int)maqVirt->registros[REGEDX];
+    unsigned int modo = (unsigned int)maqVirt->registros[REGEAX];
+    unsigned int regECX = (unsigned int)maqVirt->registros[REGECX];
+    unsigned int dirFisica;
+    int i, j, valor = 0;
+    char binario[17] = {0};
     /// Extraer tamaño y cantidad desde ECX
-    uint16_t tamBytes = (regECX >> 16) & 0xFFFF; /// 2 bytes (LDH)
-    uint16_t cantidad = regECX & 0xFFFF;        /// 2 bytes (LDL)
+    unsigned int tamBytes = regECX >> 16; /// LDH
+    unsigned int cant = regECX & 0xFFFF; /// LDL
 
-    if(tipoLlamada == 0x0){ /// FIN
-        maqVirt->registros[REGIP] = 0xFFFFFFFF;
-        maqVirt->running = false;
+    //printf("\nllamada tipo %d\n", tipoLlamada);
+    dirFisica = cambioLogicFisic(maqVirt, dirLogica, tamBytes*cant);
+
+    if (dirFisica == -1) {
+        mvError(maqVirt, "Fallo de segmento en SYS");
+        return;
+    }
+
+    /// READ
+    if(tipoLlamada == 0x1) {
+        for(i = 0; i < cant; i++) {
+            printf("[%04X]: ", dirFisica);
+
+            /// Analizar formato indicado en EAX
+            switch(modo) {
+                case 0x01:
+                    /// Modo Decimal
+                    scanf("%d", &valor);
+                    break;
+                case 0x02:
+                    /// Modo Caracter
+                    scanf("%c", &valor);
+                    break;
+                case 0x04:
+                    /// Modo Octal
+                    scanf("%o", &valor);
+                    break;
+                case 0x08:
+                    /// Modo Hexadecimal
+                    scanf("%x", &valor);
+                    break;
+                case 0x10:
+                    /// Modo Binario (convertido desde string)
+                    scanf("%s", binario);
+                    for(j = 0; binario[j] != '\0'; j++)
+                        valor = valor*2 + binario[j] - '0'; /// agregar cifra derecha => num*base + cifra
+                    break;
+                default:
+                    mvError(maqVirt, "Modo de lectura invalido");
+                    return;
+            }
+
+            writeMem(maqVirt,dirLogica,valor,tamBytes);
+
+            /// Avanza el tamaño en bytes indicado por LDH ECX
+            dirLogica += tamBytes;
+            dirFisica += tamBytes;
+        }
     }else
-        if(tipoLlamada == 0x1){ /// READ
-            for(i = 0; i < cantidad; i++) {
-                dirFisica = cambioLogicFisic(maqVirt, dirLogica);
-                if (dirFisica < 0)
-                    mvError(maqVirt, "Fallo de segmento en SYS READ");
-                else{
-                    printf("[%04X]: ", dirFisica & 0xFFFF);
+        if(tipoLlamada == 0x2) { /// WRITE
+            for(i = 0; i < cant; i++) {
+                valor = readMem(maqVirt, dirLogica, tamBytes);
 
-                    /// Analizar formato indicado en EAX (Bit 0 = Decimal)
-                    if(regEAX & 0x01)
-                        scanf("%d", &valor); /// Modo Decimal
-                    else
-                        if(regEAX & 0x02){
-                            char c;
-                            scanf(" %c", &c);
-                            valor = (int32_t)c; /// Modo Carácter
-                        }else
-                            if(regEAX & 0x08)
-                                scanf("%x", &valor); /// Modo Hexadecimal
-                            else
-                                scanf("%d", &valor); /// Por defecto decimal
+                printf("[%04X]: ", dirFisica);
 
-                    writeMem(maqVirt,dirLogica,valor);
-                    dirLogica += tamBytes; /// Avanza el tamaño en bytes indicado por LDH
-                }
-            }
-        }else
-            if(tipoLlamada == 0x2){ /// WRITE
-                dirLogica = maqVirt->registros[REGEDX];
-                for(i = 0; i < cantidad; i++) {
-                    dirFisica = cambioLogicFisic(maqVirt, dirLogica);
-                    if(dirFisica < 0)
-                        mvError(maqVirt, "Fallo de segmento en SYS WRITE");
-                    else{
-                        valor = readMem(maqVirt, dirLogica);
-                        printf("[%04X]: ", dirFisica & 0xFFFF);
-
-                        /// EAX permite multiples formatos simultaneos (comprobacion por bit)
-                        if (regEAX & 0x10) printf("0b... ");             /// Bit 4: Binario
-                        if (regEAX & 0x08) printf("0x%X ", valor);       /// Bit 3: Hexadecimal
-                        if (regEAX & 0x04) printf("0o%o ", valor);       /// Bit 2: Octal
-                        if (regEAX & 0x02) printf("%c ", (valor >= 32 && valor <= 126) ? valor : '.'); /// Bit 1: Char
-                        if (regEAX & 0x01) printf("%d ", valor);         /// Bit 0: Decimal
-
-                        printf("\n");
-                        dirLogica += tamBytes; /// Avanza el tamaño en bytes
+                    /// EAX permite multiples formatos simultaneos (comprobacion por bit)
+                    /// Bit 4: Binario
+                    if (modo & 0x10) {
+                        printf("0b");
+                        for (j = 15; j >= 0; j--) /// imprime bit a bit
+                            printf("%d", (valor >> j) & 1);
+                        printf(" ");
                     }
+                    /// Bit 3: Hexadecimal
+                    if (modo & 0x08) printf("0x%X", valor);
+                    /// Bit 2: Octal
+                    if (modo & 0x04) printf("0o%o", valor);
+                    /// Bit 1: Char
+                    if (modo & 0x02) printf("%c", (valor >= 32 && valor <= 126) ? valor : '.');
+                    /// Bit 0: Decimal
+                    if (modo & 0x01) printf("%d", valor);
+
+                    printf("\n");
+
+                    dirLogica += tamBytes;
+                    dirFisica += tamBytes;
                 }
-            }
+        } else
+            mvError(maqVirt, "Argumento invalido para SYS (1: lectura - 2: escritura)");
 }
-
-
-
-
-
