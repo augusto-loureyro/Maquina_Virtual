@@ -5,10 +5,13 @@
 #include <string.h>
 #include <stdint.h>
 #include "traductor.h"
+#include "memoriaPrincipal.h"
+#include "instruccion.h"
 
 /// Muestra la instruccion en la consola.
-char* mnemonico(uint8_t code);
-char* nombreRegistro(uint8_t reg);
-void mostrarInstruccion(ETMaquinaVirtual *maqVirt, TRInstruction inst, int32_t dirFisicaInc, int32_t dirFisicaFin);
+char* mnemonico(int code);
+char* nombreRegistro(int reg);
+void armarOperando(char *operando, ETMaquinaVirtual *maqVirt, int op);
+void mostrarInstruccion(ETMaquinaVirtual *maqVirt, unsigned int dirFisicaInc, unsigned int dirFisicaFin);
 
 #endif // DESENSAMBLAR_H_INCLUDED

@@ -12,20 +12,16 @@
 #define OPIMM       2   ///Inmediatos
 #define OPMEM       3   ///Memoria
 
-typedef struct {
-    uint8_t operacion;
-    uint8_t cantOperand;
-    uint8_t tipoOpA;
-    uint8_t tipoOpB;
-    int32_t opAValor;
-    int32_t opBValor;
-}TRInstruction;
+/*typedef struct {
+    uint8_t tipoOpB, tipoOpA, operacion, cantOperand;
+    int32_t opAValor, opBValor;
+}TRInstruction;*/
 
 /// Decodifica una instruccion desde la memoria.
-int32_t obtenerValorOperando(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp);
-TRInstruction leerInstruccion(ETMaquinaVirtual *maqVirt, int32_t *dirFisica);
-int32_t leerOperando(ETMaquinaVirtual *maqVirt, int32_t *dirFisica, uint8_t tipo);
-int32_t operandoDest(ETMaquinaVirtual *maqVirt, uint8_t tipoOp, int32_t valorOp);
-void llamadaSistema(ETMaquinaVirtual *maqVirt, int32_t tipoLlamada);
+int obtenerValorOperando(ETMaquinaVirtual *maqVirt, int tipoOp, int op);
+void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica);
+int leerOperando(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica, unsigned int bytesALeer);
+int operandoDest(ETMaquinaVirtual *maqVirt, int tipoOp, int op);
+void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada);
 
 #endif // TRADUCTOR_H_INCLUDED
