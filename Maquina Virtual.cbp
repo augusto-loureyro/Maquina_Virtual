@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="vmx Prueba.vmx -d" />
+				<Option parameters="vmx Ej7.vmx -d" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

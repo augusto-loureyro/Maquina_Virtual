@@ -3,9 +3,6 @@
 void ejecutarInstruccion(ETMaquinaVirtual *maqVirt) {
     int valA, valB, tipoOpA, tipoOpB, result;
 
-    //printf("OP1: %X  ", maqVirt->registros[REGOP1]);
-    //printf("OP2: %X\n", maqVirt->registros[REGOP2]);
-
     tipoOpA = (maqVirt->registros[REGOP1] >> 24) & 0xFF;
     tipoOpB = (maqVirt->registros[REGOP2] >> 24) & 0xFF;
     /// Obtener los valores almacenados en los operandos
@@ -14,13 +11,9 @@ void ejecutarInstruccion(ETMaquinaVirtual *maqVirt) {
     if(tipoOpB != OPNONE)
         valB = obtenerValorOperando(maqVirt, tipoOpB, maqVirt->registros[REGOP2]);
 
-    //printf("tipos: %X  %X\nvalores: %X  %X\n", tipoOpA, tipoOpB, valA, valB);
-
     /// Si hubo fallo de segmento (en readMem)
     if (!maqVirt->running)
         return;
-
-    //printf("\n MEMORIA[6] E: %02X\n", (uint8_t)maqVirt->memoria[6]);
 
     switch (maqVirt->registros[REGOPC]) {
         /// 1 operando
@@ -28,39 +21,39 @@ void ejecutarInstruccion(ETMaquinaVirtual *maqVirt) {
             llamadaSistema(maqVirt, valA);
             break;
         case JMP:
-            maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+            maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JP:
             if (((maqVirt->registros[REGCC] & NMASK) == 0) && ((maqVirt->registros[REGCC] & ZMASK) == 0))
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JN:
             if ((maqVirt->registros[REGCC] & NMASK) != 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JZ:
             if ((maqVirt->registros[REGCC] & ZMASK) != 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JC:
             if ((maqVirt->registros[REGCC] & CMASK) != 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JV:
             if ((maqVirt->registros[REGCC] & OMASK) != 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JNP:
             if ((maqVirt->registros[REGCC] & NMASK) != 0 || (maqVirt->registros[REGCC] & ZMASK) != 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JNN:
             if ((maqVirt->registros[REGCC] & NMASK) == 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case JNZ:
             if ((maqVirt->registros[REGCC] & ZMASK) == 0)
-                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] >> 16) + valA;
+                maqVirt->registros[REGIP] = (maqVirt->registros[REGCS] & 0xFFFF0000) | (valA & 0xFFFF);
             break;
         case NOT:
             result = ~valA;
@@ -75,7 +68,6 @@ void ejecutarInstruccion(ETMaquinaVirtual *maqVirt) {
         case MOV:
             result = valB;
             guardarResult(maqVirt, tipoOpA, maqVirt->registros[REGOP1], result); //envio operando codificado (NO su valor)
-            //printf("\n MEMORIA[6] E: %02X\n", (uint8_t)maqVirt->memoria[6]);
             setFlags(maqVirt, result < 0, result == 0, false, false);
             break;
         case ADD:

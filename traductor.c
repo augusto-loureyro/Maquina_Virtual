@@ -6,7 +6,6 @@ void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
     uint8_t bit7y6 = byte >> 6;
     uint8_t bit5y4 = byte >> 4 & 0x03; /// XX01 & 0011
     uint8_t bit4a0 = byte & 0x1F;
-    //printf("%X %X %X %X\n", byte, bit7y6, bit5y4, bit4a0);
 
     (*dirFisica)++;
     maqVirt->registros[REGOPC] = bit4a0;
@@ -24,9 +23,6 @@ void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
         maqVirt->registros[REGOP2] = bit7y6 << 24 | leerOperando(maqVirt, dirFisica, bit7y6);
         maqVirt->registros[REGOP1] = bit5y4 << 24 | leerOperando(maqVirt, dirFisica, bit5y4);
     }
-
-    //printf("%X ", maqVirt->registros[REGOP2]);
-    //printf("%X \n", maqVirt->registros[REGOP1]);
 }
 
 int leerOperando(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica, unsigned int bytesALeer) {
@@ -87,7 +83,6 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
     unsigned int tamBytes = regECX >> 16; /// LDH
     unsigned int cant = regECX & 0xFFFF; /// LDL
 
-    //printf("\nllamada tipo %d\n", tipoLlamada);
     dirFisica = cambioLogicFisic(maqVirt, dirLogica, tamBytes*cant);
 
     if (dirFisica == -1) {

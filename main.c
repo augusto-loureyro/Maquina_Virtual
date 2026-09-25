@@ -23,9 +23,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    strcpy(nombreArchivo, argv[1]);
+    strcpy(nombreArchivo, argv[2]);
 
-    if (argc >= 3 && strcmp(argv[2], "-d") == 0)
+    if (argc >= 3 && strcmp(argv[3], "-d") == 0)
         disassembler = true;
 
     mvInic(&maqVirt, disassembler);

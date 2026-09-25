@@ -106,14 +106,16 @@ void mostrarInstruccion(ETMaquinaVirtual *maqVirt, unsigned int dirFisicaInc, un
         armarOperando(opA, maqVirt, maqVirt->registros[REGOP1]);
     }
 
-    /// Imprimir formato: [0000] XX XX XX XX | MNEM OPA, OPB
-    printf("[%04X] %-25s  |  %-4s ", dirFisicaInc, byteHexa, mnemonico(maqVirt->registros[REGOPC]));
+    /// Imprimir formato: [0000] XX XX XX XX | MNEM OP_A, OP_B
+    byteHexa[pos - 1] = '\0'; // Eliminar el último espacio
+
+    printf("[%04X] %-23s | %-6s", dirFisicaInc, byteHexa, mnemonico(maqVirt->registros[REGOPC]));
 
     if (maqVirt->registros[REGOP1] != 0) {
         if (maqVirt->registros[REGOP2] != 0)
-            printf("%-s, %-s", opA, opB);
+            printf("%s, %s", opA, opB);
         else
-            printf("%-s", opA);
+            printf("%s", opA);
     }
 
     printf("\n");
