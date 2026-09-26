@@ -6,7 +6,6 @@ void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
     uint8_t bit7y6 = byte >> 6;
     uint8_t bit5y4 = byte >> 4 & 0x03; /// XX01 & 0011
     uint8_t bit4a0 = byte & 0x1F;
-    //printf("%X %X %X %X\n", byte, bit7y6, bit5y4, bit4a0);
 
     (*dirFisica)++;
     maqVirt->registros[REGOPC] = bit4a0;
@@ -24,9 +23,6 @@ void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica) {
         maqVirt->registros[REGOP2] = bit7y6 << 24 | leerOperando(maqVirt, dirFisica, bit7y6);
         maqVirt->registros[REGOP1] = bit5y4 << 24 | leerOperando(maqVirt, dirFisica, bit5y4);
     }
-
-    //printf("%X ", maqVirt->registros[REGOP2]);
-    //printf("%X \n", maqVirt->registros[REGOP1]);
 }
 
 int leerOperando(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica, unsigned int bytesALeer) {
@@ -52,7 +48,7 @@ int obtenerValorOperando(ETMaquinaVirtual *maqVirt, int tipoOp, int op) {
             return readMem(maqVirt, operandoDest(maqVirt, tipoOp, op), sizeof(maqVirt->registros[0]));
         else
             /// Inmediato
-            return op & 0xFFFF;
+            return (int16_t)(op & 0xFFFF);
 
 }
 
@@ -63,15 +59,14 @@ int operandoDest(ETMaquinaVirtual *maqVirt, int tipoOp, int op) {
     if(tipoOp == OPREG) {
         /// Devuelve num de registro
         return op & 0x1F;
-    }else
+    } else
         if(tipoOp == OPMEM) {
             /// Interpreta y devuelve direccion logica
             desplaz = (op >> 8) & 0xFFFF;
             registro = op & 0x1F;
             dirLogica = maqVirt->registros[registro] + desplaz;
-            //printf("\nregistro %d  desplazamiento %d  dirLogica %X\n", registro, desplaz, dirLogica);
             return dirLogica;
-        }else
+        } else
             /// Inmediato
             return op & 0xFFFF;
 }
@@ -87,7 +82,6 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
     unsigned int tamBytes = regECX >> 16; /// LDH
     unsigned int cant = regECX & 0xFFFF; /// LDL
 
-    //printf("\nllamada tipo %d\n", tipoLlamada);
     dirFisica = cambioLogicFisic(maqVirt, dirLogica, tamBytes*cant);
 
     if (dirFisica == -1) {
@@ -122,7 +116,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                     /// Modo Binario (convertido desde string)
                     scanf("%s", binario);
                     for(j = 0; binario[j] != '\0'; j++)
-                        valor = valor*2 + binario[j] - '0'; /// agregar cifra derecha => num*base + cifra
+                        valor = valor*2 + binario[j] - '0'; /// Agregar cifra derecha => num*base + cifra
                     break;
                 default:
                     mvError(maqVirt, "Modo de lectura invalido");
@@ -135,7 +129,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
             dirLogica += tamBytes;
             dirFisica += tamBytes;
         }
-    }else
+    } else
         if(tipoLlamada == 0x2) { /// WRITE
             for(i = 0; i < cant; i++) {
                 valor = readMem(maqVirt, dirLogica, tamBytes);
@@ -146,7 +140,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                     /// Bit 4: Binario
                     if (modo & 0x10) {
                         printf("0b");
-                        for (j = 15; j >= 0; j--) /// imprime bit a bit
+                        for (j = 15; j >= 0; j--) /// Imprime bit a bit
                             printf("%d", (valor >> j) & 1);
                         printf(" ");
                     }

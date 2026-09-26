@@ -115,20 +115,10 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
     maqVirt->running = true;
     baseCode = cambioLogicFisic(maqVirt, maqVirt->registros[REGCS], sizeof(maqVirt->registros[0]));
 
-    /*printf("MEMORIA[0-10]: ");
-    for (int i = 0; i < 11; i++)
-        printf("%02X ", (uint8_t)leerByteDirFisica(maqVirt, i));
-
-    printf("\n");*/
-
     if(baseCode == -1)
         mvError(maqVirt, "Fallo de segmento");
 
-    //for(int i = 0; i < 50; i++)
-    //  printf("MEMORIA[%d]: %02X\n", i, (uint8_t)maqVirt->memoria[i]);
-
     while (maqVirt->running) {
-        //printf("MEMORIA[IP = %d]: %02X\n", maqVirt->registros[REGIP], (uint8_t)maqVirt->memoria[maqVirt->registros[REGIP]]);
         if (maqVirt->registros[REGIP] == 0xFFFFFFFF) /// STOP
             maqVirt->running = false;
         else
@@ -137,7 +127,7 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
             else {
                 dirFisica = cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], 0);
 
-                if (dirFisica == -1) //ENTRA ACA CUANDO STOP
+                if (dirFisica == -1)
                     mvError(maqVirt, "Fallo de segmento");
                 else
                 {
@@ -152,16 +142,9 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
 
                     /// Actualizamos IP
                     lengInstr = dirFisicaTem - dirFisica;
-                    //printf("IP actual: %d\n", maqVirt->registros[REGIP]);
-                    //printf("\nMEMORIA[IP actual]: %02X", (uint8_t)maqVirt->memoria[cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], sizeof(maqVirt->registros[REGIP]))]);
                     maqVirt->registros[REGIP] += lengInstr;
-                    //printf("IP actualizada: %d\n", maqVirt->registros[REGIP]);
-                    //printf("\nMEMORIA[IP actualizada]: %02X", (uint8_t)maqVirt->memoria[cambioLogicFisic(maqVirt, maqVirt->registros[REGIP]+2, sizeof(maqVirt->registros[REGIP]))]);
 
-                    //printf("\n MEMORIA[6] AE: %02X\n", (uint8_t)maqVirt->memoria[6]);
                     ejecutarInstruccion(maqVirt);
-                    //printf("\n MEMORIA[6] DE: %02X\n", (uint8_t)maqVirt->memoria[6]);
-                    //printf("Luego de ejecucion: %d\n", maqVirt->registros[REGIP]);
                 }
             }
     }
@@ -171,7 +154,6 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
 void guardarResult(ETMaquinaVirtual *maqVirt, int tipoOp, int op, int result) {
     int dest;
 
-    //printf("\nop: %X\n", op);
     if(tipoOp != OPIMM) {
         dest = operandoDest(maqVirt, tipoOp, op);
 

@@ -60,28 +60,30 @@ char* nombreRegistro(int reg) {
 
 
 void armarOperando(char *operando, ETMaquinaVirtual *maqVirt, int op) {
-    int desplazamiento, tipoOp;
+    int tipoOp, salto = maqVirt->registros[REGOPC] >= 0x01 && maqVirt->registros[REGOPC] <= 0x09;
+    short inmediato, desplazamiento;
 
     tipoOp = (op >> 24) & 0xFF;
-    //printf("%X ", op);
-    //printf("%X ", tipoOp);
 
     if (tipoOp == OPREG)
         sprintf(operando, "%s", nombreRegistro(operandoDest(maqVirt, tipoOp, op)));
     else
-        if (tipoOp == OPIMM)
-            sprintf(operando, "%d", operandoDest(maqVirt, tipoOp, op));
-        else {
-            desplazamiento = (op >> 8) & 0xFFFF;
-            //printf("%d", desplazamiento);
+        if (tipoOp == OPIMM) {
+            inmediato = (short)operandoDest(maqVirt, tipoOp, op);
 
-            if (desplazamiento < 0)
-                sprintf(operando, "[%s-%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
+            if (salto)
+                sprintf(operando, "0x%04X", (unsigned short)inmediato);
             else
-                if(strcmp(nombreRegistro(operandoDest(maqVirt, OPREG, op)), "DS") == 0)
-                    sprintf(operando, "[%d]", desplazamiento);
-                else
-                    sprintf(operando, "[%s+%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
+                sprintf(operando, "%d", inmediato);
+        } else {
+            desplazamiento = (short)((op >> 8) & 0xFFFF);
+
+            if (desplazamiento == 0)
+                sprintf(operando, "[%s]", nombreRegistro(operandoDest(maqVirt, OPREG, op)));
+            else if (desplazamiento > 0)
+                sprintf(operando, "[%s+%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
+            else
+                sprintf(operando, "[%s-%d]", nombreRegistro(operandoDest(maqVirt, OPREG, op)), desplazamiento);
         }
 }
 
@@ -100,6 +102,7 @@ void mostrarInstruccion(ETMaquinaVirtual *maqVirt, unsigned int dirFisicaInc, un
     }
 
     /// Imprimir formato: [0000] XX XX XX XX | MNEM OPA, OPB
+    //byteHexa[pos - 1] = '\0';
     printf("[%04X] %-25s  |  %-4s ", dirFisicaInc, byteHexa, mnemonico(maqVirt->registros[REGOPC]));
 
     if (maqVirt->registros[REGOP1] != 0) {
