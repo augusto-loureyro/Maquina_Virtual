@@ -51,11 +51,6 @@ int readMem(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, unsigned int tamB
         for (i = 0; i < tamBytes; i++)
             valor = (valor << 8) | (uint8_t)maqVirt->memoria[dirFisica + i];
 
-        /*valor = (maqVirt->memoria[dirFisica] << 24) |
-                (maqVirt->memoria[dirFisica + 1] << 16) |
-                (maqVirt->memoria[dirFisica + 2] << 8) |
-                (maqVirt->memoria[dirFisica + 3]);*/
-
         maqVirt->registros[REGMBR] = valor;
     }
 
@@ -82,10 +77,5 @@ void writeMem(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, int valor, unsi
             maqVirt->memoria[dirFisica + i] = valor & 0xFF;
             valor >>= 8;
         }
-
-        /*maqVirt->memoria[dirFisica] = (valor >> 24) & 0xFF;
-        maqVirt->memoria[dirFisica + 1] = (valor >> 16) & 0xFF;
-        maqVirt->memoria[dirFisica + 2] = (valor >> 8) & 0xFF;
-        maqVirt->memoria[dirFisica + 3] = valor & 0xFF;*/
     }
 }

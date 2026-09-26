@@ -12,11 +12,6 @@
 #define OPIMM       2   ///Inmediatos
 #define OPMEM       3   ///Memoria
 
-/*typedef struct {
-    uint8_t tipoOpB, tipoOpA, operacion, cantOperand;
-    int32_t opAValor, opBValor;
-}TRInstruction;*/
-
 /// Decodifica una instruccion desde la memoria.
 int obtenerValorOperando(ETMaquinaVirtual *maqVirt, int tipoOp, int op);
 void leerInstruccion(ETMaquinaVirtual *maqVirt, unsigned int *dirFisica);
