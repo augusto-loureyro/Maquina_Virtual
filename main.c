@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     }
 
     reservarMemoria(&m,TAMANIO_MEMORIA);
-    cargarMemoria(nombreArchivo,m);
+    cargarMemoria(nombreArchivo,m,code_size);
     
     inicializarRegistros(r);
     //--- borrar cartel
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n---------------------------------------------\n");
     printf("Ejecutando programa...\n");
-    ejecutarPrograma(t, m, r);
+    ejecutarPrograma(t, m, r,flagD);
  
     printf("\n---------------------------------------------\n");
     printf("Registros al finalizar:\n");

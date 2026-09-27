@@ -6,11 +6,13 @@ void reportarError(TipoError tipo) {
     const char *mensaje;
     switch (tipo) {
         case ERROR_ARCHIVO_NO_ENCONTRADO: mensaje = "No se pudo abrir el archivo"; break;
-        case ERROR_ENCABEZADO_INVALIDO:   mensaje = "Encabezado inválido"; break;
-        case ERROR_VERSION_NO_SOPORTADA:  mensaje = "Versión no soportada"; break;
-        case ERROR_INSTRUCCION_INVALIDA:  mensaje = "Instrucción inválida"; break;
-        case ERROR_DIVISION_POR_CERO:     mensaje = "División por cero"; break;
+        case ERROR_ENCABEZADO_INVALIDO:   mensaje = "Encabezado invalido"; break;
+        case ERROR_VERSION_NO_SOPORTADA:  mensaje = "Version no soportada"; break;
+        case ERROR_INSTRUCCION_INVALIDA:  mensaje = "Instruccion invalida"; break;
+        case ERROR_DIVISION_POR_CERO:     mensaje = "Division por cero"; break;
         case ERROR_FALLO_DE_SEGMENTO:     mensaje = "Fallo de segmento"; break;
+        case ERROR_TAMANIO_SYS:           mensaje = "Tamanio de syscall invalido"; break;
+        case ERROR_ENTRADA_SYS:           mensaje = "Entrada de syscall invalida"; break;
         default:                          mensaje = "Error desconocido"; break;
     }
     fprintf(stderr, "Error: %s \n", mensaje);

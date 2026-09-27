@@ -2,24 +2,30 @@
 
 #include "include/loader.h"
 
-void procesarHeader(const char *nombreArchivo,uint8_t *version,uint16_t *code_size){
-        FILE *archVMX;
-        uint8_t header[8];
+void procesarHeader(const char *nombreArchivo, uint8_t *version, uint16_t *code_size){
+    FILE *archVMX;
+    uint8_t header[8];
 
-        if((archVMX = fopen(nombreArchivo,"rb"))!=NULL){
-            if(fread(header, 1, 8, archVMX) == 8) {
-                if(memcmp(header,"VMX26",5)!=0){ 
-                    reportarError(ERROR_ENCABEZADO_INVALIDO);
-                } //El archivo sample.vmx es viejo, dice VMX25
+    if((archVMX = fopen(nombreArchivo, "rb")) == NULL){
+        reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
+    }
 
-                *version=header[5];
-                if(*version!=1){ 
-                    reportarError(ERROR_VERSION_NO_SOPORTADA);
-                }
-                
-                *code_size = (header[6] << 8) | header[7]; // big-endian
-            }
+    if(fread(header, 1, 8, archVMX) != 8){
+        fclose(archVMX);
+        reportarError(ERROR_ENCABEZADO_INVALIDO);
+    }
 
-            fclose(archVMX);
-        }
+    if(memcmp(header, "VMX26", 5) != 0){
+        fclose(archVMX);
+        reportarError(ERROR_ENCABEZADO_INVALIDO);
+    }
+
+    *version = header[5];
+    if(*version != 1){
+        fclose(archVMX);
+        reportarError(ERROR_VERSION_NO_SOPORTADA);
+    }
+
+    *code_size = (header[6] << 8) | header[7];
+    fclose(archVMX);
 }

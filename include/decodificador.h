@@ -25,4 +25,5 @@ void extraerTiposOperando(uint8_t primerByte, int categoria, int *tipoA, int *ti
 int tamanioOperando(int tipo);
 Operando leerOperando(int tipo, uint8_t *bytes);
 
+
 #endif

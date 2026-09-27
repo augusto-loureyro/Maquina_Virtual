@@ -10,13 +10,19 @@ void inicializarTablaSegmentos(tabla_segmentos t){
     }
 }
 void cargarTablaSegmentos(tabla_segmentos t,uint16_t code_size){
+    uint16_t baseCode, tamanioCode;
+    uint16_t baseData, tamanioData;
+
     inicializarTablaSegmentos(t);
 
-    t[CODE]=LCH(t[CODE],0);
-    t[CODE]=LCL(t[CODE],code_size);
+    baseCode    = 0;
+    tamanioCode = code_size;
 
-    t[DATA]=LCH(t[DATA],code_size);
-    t[DATA]=LCL(t[DATA],TAMANIO_MEMORIA-code_size);
+    baseData    = code_size;
+    tamanioData = TAMANIO_MEMORIA - code_size;
+
+    t[CODE] = ((uint32_t)baseCode << 16) | tamanioCode;
+    t[DATA] = ((uint32_t)baseData << 16) | tamanioData;
 }
 
 uint16_t obtenerBaseSegmento(tabla_segmentos t,int segmento) {
@@ -26,4 +32,3 @@ uint16_t obtenerBaseSegmento(tabla_segmentos t,int segmento) {
 uint16_t obtenerTamanioSegmento(tabla_segmentos t,int segmento) {
     return (uint16_t)(t[segmento] & 0xFFFF);
 }
-// LCL y LCH, métodos para cargar parte baja o alta sin tocar lo que ya estaba. 

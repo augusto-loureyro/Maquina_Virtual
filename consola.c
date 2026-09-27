@@ -1,6 +1,8 @@
 // básico: comprueba que el comando sea válido y obtiene las flags enviadas
 
-#include "include/consola.h"
+#include "consola.h"
+#include "errores.h"
+
 
 void parsearArgumentos(int argc, char *argv[], char **nombreArchivo,int *flagD){
     int i; 
@@ -11,7 +13,11 @@ void parsearArgumentos(int argc, char *argv[], char **nombreArchivo,int *flagD){
 
     *nombreArchivo = argv[1];
 
-    if (strstr(*nombreArchivo, ".vmx") == NULL) {
+    /*if (strstr(*nombreArchivo, ".vmx") == NULL) {
+        reportarError(ERROR_ARGUMENTOS_INVALIDOS);
+    }*/
+    size_t len = strlen(*nombreArchivo);
+    if (len < 4 || strcmp(*nombreArchivo + len - 4, ".vmx") != 0) {
         reportarError(ERROR_ARGUMENTOS_INVALIDOS);
     }
 

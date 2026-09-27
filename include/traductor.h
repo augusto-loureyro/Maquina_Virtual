@@ -21,11 +21,4 @@ typedef uint32_t dirFisica;
 //       tocan LAR ni MAR ("la lectura de la instrucción no debe modificar
 //       ninguno de estos registros").
 dirFisica traducir(dirLogica l, tabla_segmentos t, Registros r, int cantidadBytes, int esAccesoAMemoria);
-
-/*anterior
-// Traduce una dirección lógica a física. Si verificarLimite es 1, además
-// valida que el acceso de 'cantidadBytes' entre dentro del segmento
-// (excepción: la lectura de la instrucción, que llama con verificarLimite=0).
-dirFisica traducir(dirLogica l, tabla_segmentos t, int cantidadBytes, int verificarLimite);
-*/
 #endif
