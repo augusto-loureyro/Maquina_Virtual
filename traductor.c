@@ -115,7 +115,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                 case 0x10:
                     /// Modo Binario (convertido desde string)
                     scanf("%s", binario);
-                    for(j = 0; j <= tamBytes*8-1; j++)
+                    for(j = 0; binario[j] != '\0'; j++)
                         valor = valor*2 + binario[j] - '0'; /// Agregar cifra derecha => num*base + cifra
                     break;
                 default:
