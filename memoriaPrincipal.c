@@ -49,7 +49,7 @@ int readMem(ETMaquinaVirtual *maqVirt, unsigned int dirLogica, unsigned int tamB
 
         /// Lectura en Big Endian
         for (i = 0; i < tamBytes; i++)
-            valor = (valor << 8) | (uint8_t)maqVirt->memoria[dirFisica + i];
+            valor = (valor << 8) | maqVirt->memoria[dirFisica + i];
 
         maqVirt->registros[REGMBR] = valor;
     }

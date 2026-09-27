@@ -76,8 +76,8 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
     unsigned int modo = (unsigned int)maqVirt->registros[REGEAX];
     unsigned int regECX = (unsigned int)maqVirt->registros[REGECX];
     unsigned int dirFisica;
-    int i, j, valor = 0;
-    char binario[17] = {0};
+    int i, j, valor;
+    char binario[33] = {0};
     /// Extraer tamaño y cantidad desde ECX
     unsigned int tamBytes = regECX >> 16; /// LDH
     unsigned int cant = regECX & 0xFFFF; /// LDL
@@ -115,7 +115,7 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                 case 0x10:
                     /// Modo Binario (convertido desde string)
                     scanf("%s", binario);
-                    for(j = 0; binario[j] != '\0'; j++)
+                    for(j = 0; j <= tamBytes*8-1; j++)
                         valor = valor*2 + binario[j] - '0'; /// Agregar cifra derecha => num*base + cifra
                     break;
                 default:
@@ -140,18 +140,18 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                     /// Bit 4: Binario
                     if (modo & 0x10) {
                         printf("0b");
-                        for (j = 15; j >= 0; j--) /// Imprime bit a bit
+                        for (j = tamBytes*8-1; j >= 0; j--) /// Imprime bit a bit
                             printf("%d", (valor >> j) & 1);
                         printf(" ");
                     }
                     /// Bit 3: Hexadecimal
-                    if (modo & 0x08) printf("0x%X", valor);
+                    if (modo & 0x08) printf("0x%X ", valor);
                     /// Bit 2: Octal
-                    if (modo & 0x04) printf("0o%o", valor);
+                    if (modo & 0x04) printf("0o%o ", valor);
                     /// Bit 1: Char
-                    if (modo & 0x02) printf("%c", (valor >= 32 && valor <= 126) ? valor : '.');
+                    if (modo & 0x02) printf("%c ", (valor >= 32 && valor <= 126) ? valor : '.');
                     /// Bit 0: Decimal
-                    if (modo & 0x01) printf("%d", valor);
+                    if (modo & 0x01) printf("%d ", valor);
 
                     printf("\n");
 
