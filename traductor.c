@@ -158,6 +158,6 @@ void llamadaSistema(ETMaquinaVirtual *maqVirt, int tipoLlamada) {
                     dirLogica += tamBytes;
                     dirFisica += tamBytes;
                 }
-        } else
-            mvError(maqVirt, "Argumento invalido para SYS (1: lectura - 2: escritura)");
+        }
+
 }

@@ -123,7 +123,7 @@ void mvEjecutar(ETMaquinaVirtual *maqVirt, unsigned int tamanioCode) {
             maqVirt->running = false;
         else
             if ((uint32_t)maqVirt->registros[REGIP] >= baseCode + tamanioCode)
-                mvError(maqVirt, "Fallo de segmento (falta instruccion STOP)");
+                maqVirt->running = false;
             else {
                 dirFisica = cambioLogicFisic(maqVirt, maqVirt->registros[REGIP], 0);
 
