@@ -1,0 +1,120 @@
+# depslib dependency file v1.0
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\errores.c
+	"include/errores.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\errores.h
+	<stdio.h>
+	<stdlib.h>
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\loader.c
+	"include/loader.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\loader.h
+	<string.h>
+	<stdint.h>
+	<stdio.h>
+	"errores.h"
+
+1792615509 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\main.c
+	<stdio.h>
+	<stdint.h>
+	<string.h>
+	"include/consola.h"
+	"include/loader.h"
+	"include/tablaSegmentos.h"
+	"include/memoria.h"
+	"include/registros.h"
+	"include/cpu.h"
+
+1792615255 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\consola.h
+	<string.h>
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\tablasegmentos.h
+	<stdint.h>
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\memoria.h
+	<stdint.h>
+	"registros.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\registros.h
+	<stdint.h>
+	"tablaSegmentos.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\cpu.h
+	"decodificador.h"
+	"tablaSegmentos.h"
+	"memoria.h"
+	"registros.h"
+	"traductor.h"
+	"alu.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\decodificador.h
+	<stdint.h>
+	"errores.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\traductor.h
+	<stdint.h>
+	"tablaSegmentos.h"
+	"registros.h"
+	"errores.h"
+
+1792615255 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\alu.h
+	<stdint.h>
+	"registros.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\procesador\traductor.c
+	"../include/traductor.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\registros\registros.c
+	"../include/registros.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\tabladesegmentos\tablasegmentos.c
+	"../include/tablaSegmentos.h"
+	"../include/memoria.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\consola.c
+	"consola.h"
+	"errores.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\disassembler.c
+	<stdio.h>
+	"disassembler.h"
+	"cpu.h"
+	"memoria.h"
+	"registros.h"
+	"opcode.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\disassembler.h
+	"cpu.h"
+	"memoria.h"
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\opcode.h
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\memoriaprincipal\memoria.c
+	<stdlib.h>
+	<stdio.h>
+	"memoria.h"
+	"errores.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\procesador\alu.c
+	"alu.h"
+	"errores.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\procesador\decodificador.c
+	"decodificador.h"
+
+1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\procesador\sys.c
+	"sys.h"
+	"traductor.h"
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	<errno.h>
+
+1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina virtual segunda\include\sys.h
+	<stdint.h>
+	"tablaSegmentos.h"
+	"memoria.h"
+	"traductor.h"
+

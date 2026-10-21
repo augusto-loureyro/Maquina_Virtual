@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     procesarHeader(nombreArchivo,&version,&code_size);
     //--- borrar cartel
     printf("Version: %d \n",version);
-    printf("tamaÃ±o del codigo: %X\n",code_size);
+    printf("tamaño del codigo: %X\n",code_size);
 
     cargarTablaSegmentos(t,code_size);
     //--borrar cartel
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
     reservarMemoria(&m,TAMANIO_MEMORIA);
     cargarMemoria(nombreArchivo,m,code_size);
-    
+
     inicializarRegistros(r);
     //--- borrar cartel
     printf("\n----------------------------------------");
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     printf("\n---------------------------------------------\n");
     printf("Ejecutando programa...\n");
     ejecutarPrograma(t, m, r,flagD);
- 
+
     printf("\n---------------------------------------------\n");
     printf("Registros al finalizar:\n");
     for (i = 0; i < CANT_REGISTROS; i++){

@@ -12,47 +12,47 @@
 uint32_t armarRegistroOperando(int tipo, uint8_t *bytes){
     uint32_t valor = 0;
     int tam = tamanioOperando(tipo);
- 
+
     for (int i = 0; i < tam; i++){
         valor = (valor << 8) | bytes[i];
     }
- 
+
     return ((uint32_t)tipo << 24) | valor;
 }
 Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r){
     Instruccion instr;
- 
+
     instr.dirInicio = traducir(r[REGIP], t, r, 1, 0); // fetch: no es acceso a memoria
     uint8_t primerByte = m[instr.dirInicio];
- 
+
     decodificarPrimerByte(primerByte, &instr.opcode, &instr.categoria);
- 
+
     int tipoA, tipoB;
     extraerTiposOperando(primerByte, instr.categoria, &tipoA, &tipoB);
- 
+
     int tamB = tamanioOperando(tipoB);
     int tamA = tamanioOperando(tipoA);
- 
+
     uint8_t *bytesB = &m[instr.dirInicio + 1];
     uint8_t *bytesA = &m[instr.dirInicio+ 1 + tamB];
- 
+
     instr.operandoB = leerOperando(tipoB, bytesB);
     instr.operandoA = leerOperando(tipoA, bytesA);
- 
+
     r[REGOPC] = instr.opcode;
     r[REGOP1] = armarRegistroOperando(tipoA, bytesA);
     r[REGOP2] = armarRegistroOperando(tipoB, bytesB);
- 
+
     instr.largoTotal = 1 + tamB + tamA;
     uint16_t nuevoOffset = (uint16_t)(r[REGIP] & 0xFFFF) + instr.largoTotal;
     r[REGIP] = (r[REGIP] & 0xFFFF0000) | nuevoOffset;
- 
+
     return instr;
 }
 uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r){
     dirLogica l;
     dirFisica f;
- 
+
     switch (o.tipo){
         case TIPO_REGISTRO:
             return r[o.codigoRegistro];
@@ -67,11 +67,11 @@ uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r
             return 0;
     }
 }
- 
+
 void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memoria m, Registros r){
     dirLogica l;
     dirFisica f;
- 
+
     switch (o.tipo){
         case TIPO_REGISTRO:
             r[o.codigoRegistro] = valor;
@@ -86,21 +86,21 @@ void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memori
     }
 }
 
- 
+
 int hayMasInstrucciones(tabla_segmentos t, Registros r){
     int segmento = r[REGIP] >> 16;
     uint16_t offset = r[REGIP] & 0xFFFF;
- 
+
     return (segmento == CODE) && (offset < obtenerTamanioSegmento(t, CODE));
 }
 
 void saltarA(uint32_t desplazamiento, Registros r){
     r[REGIP] = (r[REGIP] & 0xFFFF0000) | (desplazamiento & 0xFFFF);
 }
- 
+
 void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r){
     uint32_t valor;
- 
+
     switch (instr.opcode){
         case OPCODE_MOV:
             valor = leerValorOperando(instr.operandoB, t, m, r);
@@ -109,7 +109,7 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
             break;
         //decidí que las operaciones de la alu se encarguen de setear CC, es mas intuitivo
         case OPCODE_ADD:
-            valor = sumar(leerValorOperando(instr.operandoA, t, m, r),leerValorOperando(instr.operandoB, t, m, r), r); 
+            valor = sumar(leerValorOperando(instr.operandoA, t, m, r),leerValorOperando(instr.operandoB, t, m, r), r);
             escribirValorOperando(instr.operandoA, valor, t, m, r);
             break;
         case OPCODE_SUB:
@@ -169,11 +169,16 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
         case OPCODE_LDH:
             valor = LDH(leerValorOperando(instr.operandoA, t, m, r),leerValorOperando(instr.operandoB, t, m, r));
             escribirValorOperando(instr.operandoA,valor,t,m,r);
-            break; 
-        case OPCODE_RND:
-            uint32_t limite = leerValorOperando(instr.operandoB, t, m, r);
-            valor = (limite == 0xFFFFFFFF) ? (uint32_t)rand() : rand() % (limite + 1); //para evitar el remotísimo caso de división por 0
             break;
+        case OPCODE_RND: {
+            uint32_t limite = leerValorOperando(instr.operandoB, t, m, r);
+
+            valor = (limite == 0xFFFFFFFF)
+                ? (uint32_t)rand()
+                : rand() % (limite + 1);
+
+            break;
+            }
         // 1 operandos
         case OPCODE_SYS:
             llamadaSistema(leerValorOperando(instr.operandoA, t, m, r),m,t,r);
@@ -226,7 +231,7 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
             reportarError(ERROR_INSTRUCCION_INVALIDA);
     }
 }
- 
+
 void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r,int flagD){
     while (hayMasInstrucciones(t, r)){
         Instruccion instr = buscarInstruccion(t, m, r);
