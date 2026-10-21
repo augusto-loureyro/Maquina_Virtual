@@ -9,20 +9,28 @@
 #include "include/cpu.h"
 
 int main(int argc, char *argv[]) {
-    char *nombreArchivo;
-    int flagD,i;
+    Config cfg;
+    int i;
     uint16_t code_size;
     uint8_t version;
     tabla_segmentos t;
     Memoria m;
     Registros r;
 
-    parsearArgumentos(argc, argv, &nombreArchivo, &flagD);
-    //--- borrar cartel
-    printf("Archivo: %s\n", nombreArchivo);
-    printf("Desensamblar: %s\n", flagD ? "si" : "no");
+    parsearArgumentos(argc, argv, &cfg);
 
-    procesarHeader(nombreArchivo,&version,&code_size);
+    //--- borrar cartel
+    printf("Archivo vmx: %s\n", cfg.archivoVMX);
+    printf("Archivo vmi: %s\n", cfg.archivoVMI);
+
+    printf("Memoria: %s\n", cfg.flagM ? "si" : "no");
+    if(cfg.flagM) printf("tamanio solicitado: %d\n",cfg.sizeM);
+    printf("Desensamblar: %s\n", cfg.flagD ? "si" : "no");
+    printf("Parametros p: %s\n", cfg.flagP ? "si" : "no");
+    for(i=0;i<cfg.nP;i++)
+        printf("\t p_%02d : %d\n",i,cfg.p[i]);
+
+    procesarHeader(cfg.archivoVMX,&version,&code_size);
     //--- borrar cartel
     printf("Version: %d \n",version);
     printf("tamaño del codigo: %X\n",code_size);
@@ -36,8 +44,8 @@ int main(int argc, char *argv[]) {
         printf("\n\t %d \t %X \t %X ",i,obtenerBaseSegmento(t,i),obtenerTamanioSegmento(t,i));
     }
 
-    reservarMemoria(&m,TAMANIO_MEMORIA);
-    cargarMemoria(nombreArchivo,m,code_size);
+    reservarMemoria(&m,cfg.flagM?cfg.sizeM:TAMANIO_MEMORIA);
+    cargarMemoria(cfg.archivoVMX,m,code_size,cfg.flagM?cfg.sizeM:TAMANIO_MEMORIA);
     
     inicializarRegistros(r);
     //--- borrar cartel
@@ -50,7 +58,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n---------------------------------------------\n");
     printf("Ejecutando programa...\n");
-    ejecutarPrograma(t, m, r,flagD);
+    ejecutarPrograma(t, m, r,cfg.flagD);
  
     printf("\n---------------------------------------------\n");
     printf("Registros al finalizar:\n");
