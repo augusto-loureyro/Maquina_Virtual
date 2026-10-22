@@ -30,7 +30,60 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="./include/" />
 		</Compiler>
+		<Unit filename="Maquina Virtual.cbp" />
+		<Unit filename="Maquina Virtual.depend" />
+		<Unit filename="Maquina Virtual.layout" />
+		<Unit filename="MemoriaPrincipal/memoria.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Procesador/alu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Procesador/cpu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Procesador/decodificador.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Procesador/sys.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Procesador/traductor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Registros/registros.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="TablaDeSegmentos/tablaSegmentos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="consola.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="disassembler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="errores.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="include/alu.h" />
+		<Unit filename="include/consola.h" />
+		<Unit filename="include/cpu.h" />
+		<Unit filename="include/decodificador.h" />
+		<Unit filename="include/disassembler.h" />
+		<Unit filename="include/errores.h" />
+		<Unit filename="include/loader.h" />
+		<Unit filename="include/memoria.h" />
+		<Unit filename="include/opcode.h" />
+		<Unit filename="include/registros.h" />
+		<Unit filename="include/sys.h" />
+		<Unit filename="include/tablaSegmentos.h" />
+		<Unit filename="include/traductor.h" />
+		<Unit filename="loader.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
