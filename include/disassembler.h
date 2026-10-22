@@ -1,12 +1,11 @@
 #ifndef DISASSEMBLER_H
 #define DISASSEMBLER_H
 
-#include "cpu.h"      // Instruccion, Operando
-#include "memoria.h"  // Memoria
+#include "cpu.h"
+#include "memoria.h"
 
 void mostrarInstruccion(Instruccion instr, Memoria m);
-void imprimirOperando(Operando o);
-char* mnemonico(int opcode);
-char* nombreRegistro(int reg);
+const char* mnemonico(int opcode);
+const char* nombreRegistro(int reg);
 
-#endif
+#endif // DISASSEMBLER_H

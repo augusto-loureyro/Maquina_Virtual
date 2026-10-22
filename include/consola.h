@@ -1,13 +1,13 @@
-/*
-    Que consola 
-        parsee los argumentos (solo verifica que no haya argumentos invalidos)
-        verifique la extension .vmx del archivo
-*/
+#ifndef CONSOLA_H
+#define CONSOLA_H
 
-#ifndef consola_h
-#define consola_h
-#include <string.h>
-
+/**
+ * Formato esperado:
+ *   vmx <archivo.vmx> [-d]
+ *   (admite también el flag -d antes o después del nombre de archivo,
+ *    y tolera la invocación directa o vía prefijo 'vmx').
+ *
+ */
 void parsearArgumentos(int argc, char *argv[], char **nombreArchivo, int *flagD);
 
-#endif
+#endif // CONSOLA_H

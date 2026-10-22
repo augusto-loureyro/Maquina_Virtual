@@ -35,37 +35,16 @@
 		<Unit filename="Maquina Virtual.cbp" />
 		<Unit filename="Maquina Virtual.depend" />
 		<Unit filename="Maquina Virtual.layout" />
-		<Unit filename="MemoriaPrincipal/memoria.c">
+		<Unit filename="cpu/alu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Procesador/alu.c">
+		<Unit filename="cpu/cpu.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Procesador/cpu.c">
+		<Unit filename="cpu/decodificador.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Procesador/decodificador.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="Procesador/sys.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="Procesador/traductor.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="Registros/registros.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="TablaDeSegmentos/tablaSegmentos.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="consola.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="disassembler.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="errores.c">
+		<Unit filename="cpu/registros.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="include/alu.h" />
@@ -81,10 +60,31 @@
 		<Unit filename="include/sys.h" />
 		<Unit filename="include/tablaSegmentos.h" />
 		<Unit filename="include/traductor.h" />
-		<Unit filename="loader.c">
+		<Unit filename="io/consola.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="io/disassembler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="io/sys.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memoria/memoria.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memoria/tablaSegmentos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memoria/traductor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="util/errores.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="util/loader.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

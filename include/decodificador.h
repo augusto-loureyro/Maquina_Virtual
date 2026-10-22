@@ -4,26 +4,31 @@
 #include <stdint.h>
 #include "errores.h"
 
-#define DOS_OPERANDOS 2
-#define UN_OPERANDO 1
-#define SIN_OPERANDOS 0
+// Categorías de instrucción por cantidad de operandos
+#define SIN_OPERANDOS  0
+#define UN_OPERANDO    1
+#define DOS_OPERANDOS  2
 
-#define TIPO_NINGUNO 0
-#define TIPO_REGISTRO 1
-#define TIPO_INMEDIATO 2
-#define TIPO_MEMORIA 3
+// Tipos de operandos (su código binario coincide con su tamaño en bytes)
+#define TIPO_NINGUNO   0  // 0 bytes
+#define TIPO_REGISTRO  1  // 1 byte
+#define TIPO_INMEDIATO 2  // 2 bytes
+#define TIPO_MEMORIA   3  // 3 bytes
 
+/**
+ * @brief Estructura que almacena la información de un operando decodificado.
+ */
 typedef struct {
-    int tipo;
-    int codigoRegistro;   // válido si tipo == TIPO_REGISTRO o TIPO_MEMORIA
-    int16_t desplazamiento; // válido si tipo == TIPO_MEMORIA
-    int16_t inmediato;      // válido si tipo == TIPO_INMEDIATO
+    int tipo;               /**< TIPO_NINGUNO, TIPO_REGISTRO, TIPO_INMEDIATO o TIPO_MEMORIA */
+    int codigoRegistro;     /**< Código de registro (0..31), válido en TIPO_REGISTRO y TIPO_MEMORIA */
+    int16_t desplazamiento; /**< Offset con signo, válido en TIPO_MEMORIA */
+    int16_t inmediato;      /**< Valor entero de 16 bits con signo, válido en TIPO_INMEDIATO */
 } Operando;
+
 
 void decodificarPrimerByte(uint8_t primerByte, int *opcode, int *categoria);
 void extraerTiposOperando(uint8_t primerByte, int categoria, int *tipoA, int *tipoB);
 int tamanioOperando(int tipo);
 Operando leerOperando(int tipo, uint8_t *bytes);
 
-
-#endif
+#endif // DECODIFICADOR_H

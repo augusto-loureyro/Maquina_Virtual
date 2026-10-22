@@ -1,14 +1,17 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#include <string.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "errores.h"
 
-//procesarHeader valida identificador, version y obtiene code_size
+/**
+ * Lee y valida el encabezado de un ejecutable VMX.
+ *
+ * Verifica:
+ *   - Identificador "VMX26" (bytes 0-4)
+ *   - Versión 1 (byte 5)
+ *   - Obtiene el tamaño del segmento de código en bytes (bytes 6-7, big-endian)
+ *
+ */
 void procesarHeader(const char *nombreArchivo, uint8_t *version, uint16_t *code_size);
 
-void leerCodigo();
-
-#endif
+#endif // LOADER_H

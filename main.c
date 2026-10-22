@@ -1,61 +1,43 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-#include "include/consola.h"
-#include "include/loader.h"
-#include "include/tablaSegmentos.h"
-#include "include/memoria.h"
-#include "include/registros.h"
-#include "include/cpu.h"
+#include "consola.h"
+#include "loader.h"
+#include "tablaSegmentos.h"
+#include "memoria.h"
+#include "registros.h"
+#include "cpu.h"
 
 int main(int argc, char *argv[]) {
-    char *nombreArchivo;
-    int flagD,i;
-    uint16_t code_size;
-    uint8_t version;
+    char *nombreArchivo = NULL;
+    int flagD = 0;
+    uint8_t version = 0;
+    uint16_t code_size = 0;
+
     tabla_segmentos t;
-    Memoria m;
+    Memoria m = NULL;
     Registros r;
 
+    /// 1. Parsear y validar argumentos de linea de comandos: vmx <archivo.vmx> [-d]
     parsearArgumentos(argc, argv, &nombreArchivo, &flagD);
-    //--- borrar cartel
-    printf("Archivo: %s\n", nombreArchivo);
-    printf("Desensamblar: %s\n", flagD ? "si" : "no");
 
-    procesarHeader(nombreArchivo,&version,&code_size);
-    //--- borrar cartel
-    printf("Version: %d \n",version);
-    printf("tama�o del codigo: %X\n",code_size);
+    /// 2. Procesar y validar encabezado del ejecutable (identificador VMX26, version y code_size)
+    procesarHeader(nombreArchivo, &version, &code_size);
 
-    cargarTablaSegmentos(t,code_size);
-    //--borrar cartel
-    printf("\n----------------------------------------");
-    printf("\n num segmento \t base \t tamanio ");
-    for(i=0;i<CANT_SEG;i++){
-        printf("\n----------------------------------------");
-        printf("\n\t %d \t %X \t %X ",i,obtenerBaseSegmento(t,i),obtenerTamanioSegmento(t,i));
-    }
+    /// 3. Inicializar y cargar la tabla de descriptores de segmentos (CODE y DATA)
+    cargarTablaSegmentos(t, code_size);
 
-    reservarMemoria(&m,TAMANIO_MEMORIA);
-    cargarMemoria(nombreArchivo,m,code_size);
+    /// 4. Reservar 16 KiB de memoria RAM y cargar el segmento de codigo
+    reservarMemoria(&m, TAMANIO_MEMORIA);
+    cargarMemoria(nombreArchivo, m, code_size);
 
+    /// 5. Inicializar el banco de 32 registros (CS, DS, IP apuntando a CODE)
     inicializarRegistros(r);
-    //--- borrar cartel
-    printf("\n----------------------------------------");
-    printf("\n num registro \t valor ");
-    for(i=0;i<CANT_REGISTROS;i++){
-        printf("\n----------------------------------------");
-        printf("\n\t %d \t %08X",i,r[i]);
-    }
 
-    printf("\n---------------------------------------------\n");
-    printf("Ejecutando programa...\n");
-    ejecutarPrograma(t, m, r,flagD);
+    /// 6. Ejecutar el ciclo de instrucción de la Máquina Virtual
+    ejecutarPrograma(t, m, r, flagD);
 
-    printf("\n---------------------------------------------\n");
-    printf("Registros al finalizar:\n");
-    for (i = 0; i < CANT_REGISTROS; i++){
-        printf("%d \t\t %08X\n", i, r[i]);
-    }
+    /// 7. Liberar recursos antes de finalizar
+    liberarMemoria(&m);
+
     return 0;
 }

@@ -146,16 +146,15 @@
 	<stdio.h>
 	"errores.h"
 
-1792615509 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\main.c
+1792696469 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\main.c
 	<stdio.h>
 	<stdint.h>
-	<string.h>
-	"include/consola.h"
-	"include/loader.h"
-	"include/tablaSegmentos.h"
-	"include/memoria.h"
-	"include/registros.h"
-	"include/cpu.h"
+	"consola.h"
+	"loader.h"
+	"tablaSegmentos.h"
+	"memoria.h"
+	"registros.h"
+	"cpu.h"
 
 1792615255 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\consola.h
 	<string.h>
@@ -203,18 +202,18 @@
 	"../include/tablaSegmentos.h"
 	"../include/memoria.h"
 
-1792615255 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\consola.h
-	<string.h>
+1792695436 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\consola.h
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\errores.h
+1792695527 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\errores.h
 	<stdio.h>
 	<stdlib.h>
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\disassembler.h
+1792695521 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\disassembler.h
 	"cpu.h"
 	"memoria.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\cpu.h
+1792695489 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\cpu.h
+	<stdint.h>
 	"decodificador.h"
 	"tablaSegmentos.h"
 	"memoria.h"
@@ -222,32 +221,31 @@
 	"traductor.h"
 	"alu.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\decodificador.h
+1792695507 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\decodificador.h
 	<stdint.h>
 	"errores.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\tablasegmentos.h
+1792695614 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\tablasegmentos.h
 	<stdint.h>
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\memoria.h
+1792695554 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\memoria.h
 	<stdint.h>
 	"registros.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\registros.h
+1792695565 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\registros.h
 	<stdint.h>
-	"tablaSegmentos.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\traductor.h
+1792695618 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\traductor.h
 	<stdint.h>
 	"tablaSegmentos.h"
 	"registros.h"
 	"errores.h"
 
-1792615255 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\alu.h
+1792695417 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\alu.h
 	<stdint.h>
 	"registros.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\opcode.h
+1792631852 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\opcode.h
 
 1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\memoriaprincipal\memoria.c
 	<stdlib.h>
@@ -266,10 +264,11 @@
 	"sys.h"
 	"errores.h"
 
-1792615256 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\sys.h
+1792695578 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\sys.h
 	<stdint.h>
 	"tablaSegmentos.h"
 	"memoria.h"
+	"registros.h"
 	"traductor.h"
 
 1792615255 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\procesador\decodificador.c
@@ -283,4 +282,74 @@
 	<string.h>
 	<ctype.h>
 	<errno.h>
+
+1792695543 f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\include\\loader.h
+	<stdint.h>
+
+1792695988 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\cpu\alu.c
+	"alu.h"
+	"errores.h"
+
+1792695941 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\cpu\cpu.c
+	<stdlib.h>
+	"cpu.h"
+	"disassembler.h"
+	"opcode.h"
+	"sys.h"
+	"errores.h"
+
+1792696093 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\cpu\decodificador.c
+	"decodificador.h"
+
+1792696125 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\cpu\registros.c
+	"registros.h"
+	"tablaSegmentos.h"
+
+1792696163 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\io\consola.c
+	<stdio.h>
+	<string.h>
+	<ctype.h>
+	"consola.h"
+	"errores.h"
+
+1792696262 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\io\disassembler.c
+	<stdio.h>
+	<string.h>
+	"disassembler.h"
+	"cpu.h"
+	"memoria.h"
+	"registros.h"
+	"opcode.h"
+
+1792696364 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\io\sys.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	<errno.h>
+	"sys.h"
+	"traductor.h"
+	"errores.h"
+
+1792696386 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\memoria\memoria.c
+	<stdlib.h>
+	<stdio.h>
+	"memoria.h"
+	"errores.h"
+
+1792696409 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\memoria\tablasegmentos.c
+	"tablaSegmentos.h"
+	"memoria.h"
+
+1792696436 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\memoria\traductor.c
+	"traductor.h"
+
+1792631938 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\util\errores.c
+	"errores.h"
+
+1792696455 source:f:\traherm\ingenieria\informatica\segundo año\2°c\fundamentos de la arquitectura de computadoras\tp maquina virtual\maquina_virtual_git\util\loader.c
+	<stdio.h>
+	<string.h>
+	"loader.h"
+	"errores.h"
 

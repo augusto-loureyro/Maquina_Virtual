@@ -1,16 +1,17 @@
 #ifndef TABLASEGMENTOS_H
 #define TABLASEGMENTOS_H
 
+#include <stdint.h>
+
 #define CANT_SEG 8
-#define CODE 0 
-#define DATA 1
-#include<stdint.h>
+#define CODE     0
+#define DATA     1
+
 
 typedef uint32_t tabla_segmentos[CANT_SEG];
+void inicializarTablaSegmentos(tabla_segmentos t);
+void cargarTablaSegmentos(tabla_segmentos t, uint16_t code_size);
+uint16_t obtenerBaseSegmento(tabla_segmentos t, int segmento);
+uint16_t obtenerTamanioSegmento(tabla_segmentos t, int segmento);
 
-void incializarTablaSegmentos(tabla_segmentos t);
-void cargarTablaSegmentos(tabla_segmentos t,uint16_t code_size);
-uint16_t obtenerBaseSegmento(tabla_segmentos t,int segmento);
-uint16_t obtenerTamanioSegmento(tabla_segmentos t,int segmento);
-
-#endif 
+#endif // TABLASEGMENTOS_H
