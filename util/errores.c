@@ -5,7 +5,7 @@ void reportarError(TipoError tipo) {
 
     switch (tipo) {
         case ERROR_ARGUMENTOS_INVALIDOS:
-            mensaje = "Argumentos invalidos. Uso: vmx <archivo.vmx> [-d]";
+            mensaje = "Argumentos invalidos. Uso: vmx [filename.vmx] [filename.vmi] [m=M] [-d] [-p param1 param2 ... paramN]";
             break;
         case ERROR_ARCHIVO_NO_ENCONTRADO:
             mensaje = "No se pudo abrir el archivo";

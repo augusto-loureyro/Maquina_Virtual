@@ -302,7 +302,7 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
 void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r, int flagD) {
     while (hayMasInstrucciones(t, r)) {
         Instruccion instr = buscarInstruccion(t, m, r);
-        if (flagD) {
+        if(flagD){
             mostrarInstruccion(instr, m);
         }
         ejecutarInstruccion(instr, t, m, r);
