@@ -1,19 +1,35 @@
+
 #ifndef consola_h
 #define consola_h
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#include "loader.h"
 
-typedef struct{
-    char archivoVMX[FILENAME_MAX];
-    char archivoVMI[FILENAME_MAX];
-    int flagD;
-    int flagM;
-    int flagP;
-    int sizeM;     // tamaño de memoria leído con m=
-    char *p[100];    
-    int nP;        // cantidad de parámetros
-} Config;
+#define MEMORIA_POR_DEFECTO_KIB 16
 
-void parsearArgumentos(int argc, char *argv[], Config *cfg);
+typedef struct {
+    char *archVMX;           /** Ruta y nombre del archivo .vmx (NULL si no se especifico) */
+    char *archVMI;           /** Ruta y nombre del archivo .vmi (NULL si no se especifico) */
+    uint32_t mem_kib;        /** Tamaño de la memoria principal en KiB (por defecto 16 KiB) */
+    int flagM;               //facu /** 1 se se especifico el flag -m, 0 en caso contrario */
+    int flagD;               /** 1 si se especifico el flag -d, 0 en caso contrario */
+    int flagP;               /** 1 si se especifico el flag -p, 0 en caso contrario */
+    int cantParams;          /** Cantidad de parametros del proceso pasados tras -p */
+    char **params;           /** Puntero al arreglo de cadenas de parametros */
+    HeaderVMX header;        /** Metadatos del encabezado VMX (leidos por el loader) */
+} ConfiguracionMV;
 
-#endif
+void inicializarConfiguracion(ConfiguracionMV *cfg);
+void parsearArgumentos(int argc, char *argv[], ConfiguracionMV *cfg);
+
+/**
+ * Muestra por consola la configuracion parseada de la Maquina Virtual.
+ */
+void mostrarConfiguracion(const ConfiguracionMV *cfg);
+
+/**
+ * Muestra por consola todos los metadatos de configuracion y del encabezado VMX.
+ */
+void mostrarMetadatos(const ConfiguracionMV *cfg);
+#endif 

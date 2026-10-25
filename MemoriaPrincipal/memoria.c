@@ -6,22 +6,46 @@
 #include "errores.h"
 
 void reservarMemoria(Memoria *m,int sizeM){ //sizeM, en KiB, vale lo que se indicó en el comando, o 16 si no se indicó
-    *m = (uint8_t *)calloc(sizeM*BYTES_POR_KIB, 1); //reservo sizeM*1024 bytes inicializados en 0...
+    if (m == NULL || sizeM <= 0) {
+        reportarError(ERROR_ARGUMENTOS_INVALIDOS);
+    }
+
+    *m = (uint8_t *)calloc((size_t)sizeM * BYTES_POR_KIB, 1);
+    if (*m == NULL) {
+        reportarError(ERROR_MEMORIA_INSUFICIENTE);
+    }
 }
 
-void cargarMemoria(char *nombreArchivo, Memoria m, Config cfg, Header hdr){
+void cargarMemoria(const char *nombreArchivo, Memoria m, ConfiguracionMV *cfg) {
     FILE *archVMX;
+    HeaderVMX *hdr;
+    size_t capacidad;
+    size_t bytesSegmentos;
 
-    if ((archVMX = fopen(nombreArchivo, "rb")) == NULL){
+    if (nombreArchivo == NULL || m == NULL || cfg == NULL) {
+        reportarError(ERROR_ARGUMENTOS_INVALIDOS);
+    }
+
+    hdr = &cfg->header;
+    capacidad = (size_t)cfg->mem_kib * BYTES_POR_KIB;
+    if ((archVMX = fopen(nombreArchivo, "rb")) == NULL) {
         reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
     }
 
-    if(hdr.version==1)
-        fseek(archVMX, 8, SEEK_SET);
-    else if(hdr.version==2)
-        fseek(archVMX, 18, SEEK_SET);
-    else 
+    if (hdr->version == 1) {
+        if (fseek(archVMX, TAMANIO_HEADER_VMX1, SEEK_SET) != 0) {
+            fclose(archVMX);
+            reportarError(ERROR_ENCABEZADO_INVALIDO);
+        }
+    } else if (hdr->version == 2) {
+        if (fseek(archVMX, TAMANIO_HEADER_VMX2, SEEK_SET) != 0) {
+            fclose(archVMX);
+            reportarError(ERROR_ENCABEZADO_INVALIDO);
+        }
+    } else {
+        fclose(archVMX);
         reportarError(ERROR_VERSION_NO_SOPORTADA);
+    }
 
     /*
             Todos los segmentos deben cargarse de forma contigua en la memoria, 
@@ -30,17 +54,40 @@ void cargarMemoria(char *nombreArchivo, Memoria m, Config cfg, Header hdr){
         excepción del Code Segment y del Stack Segment, puede suceder que no 
         todos los segmentos estén presentes. 
     */
-    if(cfg.flagP && cfg.nP>0){
-        cargarParamSegment(cfg.archivoVMX,m,(size_t)cfg.sizeM*BYTES_POR_KIB,cfg.nP,cfg.p,&hdr.sizePS);
+    hdr->param_size = 0;
+    if (cfg->flagP && cfg->cantParams > 0) {
+        cargarParamSegment(cfg->archVMX, m, capacidad,
+                           cfg->cantParams, cfg->params, &hdr->param_size);
     }
 
-    size_t offset=hdr.sizePS;
-    if(fread(m+offset,1,hdr.sizeKS,archVMX)!=hdr.sizeKS){
-        fclose(archVMX);
-        reportarError(ERROR_ENCABEZADO_INVALIDO); // archivo truncado: menos bytes de los que declara el header
+    if (hdr->version == 1) {
+        size_t codeAndParams = (size_t)hdr->code_size + hdr->param_size;
+        if (codeAndParams > capacidad ||
+            capacidad - codeAndParams > UINT16_MAX) {
+            fclose(archVMX);
+            reportarError(ERROR_MEMORIA_INSUFICIENTE);
+        }
+        hdr->data_size = (uint16_t)(capacidad - codeAndParams);
     }
-    offset+=hdr.sizeKS;
-    if(fread(m+offset,1,hdr.sizeCS,archVMX)!=hdr.sizeCS){
+
+    bytesSegmentos = (size_t)hdr->param_size +
+                     hdr->const_size +
+                     hdr->code_size +
+                     hdr->data_size +
+                     hdr->extra_size +
+                     hdr->stack_size;
+    if (bytesSegmentos > capacidad || bytesSegmentos > UINT16_MAX + 1u) {
+        fclose(archVMX);
+        reportarError(ERROR_MEMORIA_INSUFICIENTE);
+    }
+
+    size_t offset = hdr->param_size;
+    if (fread(m + offset, 1, hdr->const_size, archVMX) != hdr->const_size) {
+        fclose(archVMX);
+        reportarError(ERROR_ENCABEZADO_INVALIDO);
+    }
+    offset += hdr->const_size;
+    if (fread(m + offset, 1, hdr->code_size, archVMX) != hdr->code_size) {
         fclose(archVMX);
         reportarError(ERROR_ENCABEZADO_INVALIDO);
     }
@@ -60,7 +107,8 @@ contendrán en los 16 bits menos significativos el offset de cada string dentro 
 más significativos 0x0000, la entrada a la tabla de segmentos.
 */
 
-void cargarParamSegment(char *archVMX,Memoria m,size_t capacidad,int argc,char *p[],uint16_t *sizePS){
+void cargarParamSegment(const char *archVMX, Memoria m, size_t capacidad,
+                        int argc, char *p[], uint16_t *sizePS) {
     if(archVMX==NULL || m==NULL || argc<0 || (argc>0 && p==NULL) || sizePS==NULL){
         reportarError(ERROR_ARGUMENTOS_INVALIDOS);
     }

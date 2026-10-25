@@ -1,4 +1,5 @@
 #include "tablaSegmentos.h"
+#include "errores.h"
 
 
 void inicializarTablaSegmentos(tabla_segmentos t){
@@ -21,39 +22,49 @@ que la posición de cada segmento en la tabla no será siempre la misma. La cons
 ser posterior a la creación de los segmentos y el orden en la tabla debe ser el mismo que su ubicación 
 física en la memoria principal.
 */
-void cargarTablaSegmentos(tabla_segmentos t,IndiceSgm *index, Header hdr){
+void cargarTablaSegmentos(tabla_segmentos t,IndiceSgm *index, HeaderVMX hdr){
     uint16_t offset=0, numI=0;
 
-    inicializarTablaSegmentos(t);
+    if (t == 0 || index == 0) {
+        reportarError(ERROR_ARGUMENTOS_INVALIDOS);
+    }
 
-    if(hdr.sizePS>0){
-        t[numI]= ((uint32_t)offset << 16) | hdr.sizePS;
-        offset+=hdr.sizePS;
+    inicializarTablaSegmentos(t);
+    index->ps = -1;
+    index->cs = -1;
+    index->ds = -1;
+    index->es = -1;
+    index->ss = -1;
+    index->ks = -1;
+
+    if(hdr.param_size>0){
+        t[numI]= ((uint32_t)offset << 16) | hdr.param_size;
+        offset+=hdr.param_size;
         index->ps=numI++;
     }
-    if(hdr.sizeKS>0){
-        t[numI]= ((uint32_t)offset << 16) | hdr.sizeKS;
-        offset+=hdr.sizeKS;
+    if(hdr.const_size>0){
+        t[numI]= ((uint32_t)offset << 16) | hdr.const_size;
+        offset+=hdr.const_size;
         index->ks=numI++;
     }
-    if(hdr.sizeCS>0){
-        t[numI]= ((uint32_t)offset << 16) | hdr.sizeCS;
-        offset+=hdr.sizeCS;
+    if(hdr.code_size>0){
+        t[numI]= ((uint32_t)offset << 16) | hdr.code_size;
+        offset+=hdr.code_size;
         index->cs=numI++;
     }
-    if(hdr.sizeDS>0){
-        t[numI]= ((uint32_t)offset << 16) | hdr.sizeDS;
-        offset+=hdr.sizeDS;
+    if(hdr.data_size>0){
+        t[numI]= ((uint32_t)offset << 16) | hdr.data_size;
+        offset+=hdr.data_size;
         index->ds=numI++;
     }
-    if(hdr.sizeES>0){
-        t[numI]= ((uint32_t)offset << 16) | hdr.sizeES;
-        offset+=hdr.sizeES;
+    if(hdr.extra_size>0){
+        t[numI]= ((uint32_t)offset << 16) | hdr.extra_size;
+        offset+=hdr.extra_size;
         index->es=numI++;
     }
-    if(hdr.sizeSS>0){
-        t[numI]= ((uint32_t)offset << 16) | hdr.sizeSS;
-        offset+=hdr.sizeSS;
+    if(hdr.stack_size>0){
+        t[numI]= ((uint32_t)offset << 16) | hdr.stack_size;
+        offset+=hdr.stack_size;
         index->ss=numI++;
     }
 }

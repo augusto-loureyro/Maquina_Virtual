@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "include/consola.h"
 #include "include/loader.h"
@@ -7,29 +8,14 @@
 #include "include/registros.h"
 #include "include/cpu.h"
 
-static void imprimirConfiguracion(const Config *config) {
-    printf("Archivo vmx: %s\n", config->archivoVMX);
-    printf("Archivo vmi: %s\n", config->archivoVMI);
-    printf("Memoria: %s\n", config->flagM ? "si" : "no");
-    if (config->flagM) {
-        printf("tamanio solicitado: %d\n", config->sizeM);
-    }
-    printf("Desensamblar: %s\n", config->flagD ? "si" : "no");
-    printf("Parametros p: %s\n", config->flagP ? "si" : "no");
-
-    for (int i = 0; i < config->nP; i++) {
-        printf("\t p_%02d : %s\n", i, config->p[i]);
-    }
-}
-
-static void imprimirEncabezado(const Header *hdr) {
+static void imprimirEncabezado(const HeaderVMX *hdr) {
     printf("Version: %d\n", hdr->version);
-    printf("tamanio del seg. de codigo: %X\n", hdr->sizeCS);
-    printf("tamanio del seg. de datos: %X\n", hdr->sizeDS);
-    printf("tamanio del seg. extra: %X\n", hdr->sizeES);
-    printf("tamanio del seg. del stack: %X\n", hdr->sizeSS);
-    printf("tamanio del seg. de constantes: %X\n", hdr->sizeKS);
-    printf("offset del ep: %X\n", hdr->offsetEP);
+    printf("tamanio del seg. de codigo: %u\n", hdr->code_size);
+    printf("tamanio del seg. de datos: %u\n", hdr->data_size);
+    printf("tamanio del seg. extra: %u\n", hdr->extra_size);
+    printf("tamanio del seg. del stack: %u\n", hdr->stack_size);
+    printf("tamanio del seg. de constantes: %u\n", hdr->const_size);
+    printf("offset del ep: %u\n", hdr->entry_point);
 }
 
 static void imprimirTablaSegmentos(tabla_segmentos tabla) {
@@ -52,39 +38,57 @@ static void imprimirRegistros(const char *titulo, Registros registros) {
 }
 
 int main(int argc, char *argv[]) {
-    Config config;
-    Header hdr;
+    ConfiguracionMV config;
     tabla_segmentos tabla;
     IndiceSgm indices;
-    Memoria memoria;
+    Memoria memoria = NULL;
     Registros registros;
+    uint32_t memoriaBytes;
+    uint32_t bytesSegmentos;
 
+    inicializarConfiguracion(&config);
     parsearArgumentos(argc, argv, &config);
-    imprimirConfiguracion(&config);
 
-    procesarHeaderVMX(config.archivoVMX, &hdr);
-    if (!config.flagM || hdr.version == 1) {
-        config.sizeM = TAMANIO_MEMORIA_DEFAULT;
+    if (config.archVMX == NULL) {
+        mostrarConfiguracion(&config);
+        return 0;
     }
-    imprimirEncabezado(&hdr);
 
-    if (hdr.sizeCS + hdr.sizeDS + hdr.sizeES + hdr.sizeKS +
-        hdr.sizeSS + hdr.sizePS > config.sizeM) {
+    procesarHeader(config.archVMX, &config.header);
+    if (config.header.version == 1) {
+        config.mem_kib = MEMORIA_POR_DEFECTO_KIB;
+        if (config.header.code_size > TAMANIO_MEMORIA_DEFAULT) {
+            reportarError(ERROR_MEMORIA_INSUFICIENTE);
+        }
+    }
+
+    memoriaBytes = config.mem_kib * BYTES_POR_KIB;
+    bytesSegmentos = (uint32_t)config.header.param_size +
+                     config.header.const_size +
+                     config.header.code_size +
+                     config.header.data_size +
+                     config.header.extra_size +
+                     config.header.stack_size;
+    if (bytesSegmentos > memoriaBytes || bytesSegmentos > UINT16_MAX + 1u) {
         reportarError(ERROR_MEMORIA_INSUFICIENTE);
     }
 
-    cargarTablaSegmentos(tabla, &indices, hdr);
+    mostrarConfiguracion(&config);
+
+    reservarMemoria(&memoria, config.mem_kib);
+    cargarMemoria(config.archVMX, memoria, &config);
+    imprimirEncabezado(&config.header);
+    cargarTablaSegmentos(tabla, &indices, config.header);
+
     imprimirTablaSegmentos(tabla);
-
-    reservarMemoria(&memoria, config.sizeM);
-    cargarMemoria(config.archivoVMX, memoria, config, hdr);
-
     inicializarRegistros(registros, indices);
+    registros[REGIP] = ((uint32_t)indices.cs << 16) | config.header.entry_point;
     imprimirRegistros("Registros iniciales:", registros);
 
     printf("\nEjecutando programa...\n");
     ejecutarPrograma(tabla, memoria, registros, config.flagD, indices);
 
     imprimirRegistros("Registros al finalizar:", registros);
+    free(memoria);
     return 0;
 }

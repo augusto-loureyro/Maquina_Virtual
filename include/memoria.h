@@ -15,10 +15,10 @@
 typedef uint8_t *Memoria;
 
 void reservarMemoria(Memoria *m,int sizeM);
-void cargarMemoria(char *nombreArchivo,Memoria m,Config cfg,Header hdr);//carga todo el codigo que sigue a la cabecera
+void cargarMemoria(const char *nombreArchivo, Memoria m, ConfiguracionMV *cfg);
 uint32_t leerDeMemoria(Memoria m, uint32_t f, int n, Registros r);
 void escribirEnMemoria(Memoria m, uint32_t f, uint32_t valor, int n, Registros r);
 
-void cargarParamSegment(char *archVMX,Memoria m,size_t capacidad,int argc,char *p[],uint16_t *sizePS);
+void cargarParamSegment(const char *archVMX, Memoria m, size_t capacidad, int argc, char *p[], uint16_t *sizePS);
 
 #endif 
