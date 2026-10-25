@@ -1,11 +1,12 @@
 #include "decodificador.h"
+#include "opcode.h"
 
 void decodificarPrimerByte(uint8_t primerByte, int *opcode, int *categoria) {
     *opcode = primerByte & 0x1F; // 5 bits menos significativos
 
-    if (*opcode == 0x0F) {
+    if (*opcode == OPCODE_STOP || *opcode == OPCODE_RET) {
         *categoria = SIN_OPERANDOS;
-    } else if (*opcode <= 0x0A) {
+    } else if (*opcode <= OPCODE_CALL) {
         *categoria = UN_OPERANDO;
     } else if (*opcode >= 0x10 && *opcode <= 0x1F) {
         *categoria = DOS_OPERANDOS;
@@ -45,12 +46,16 @@ Operando leerOperando(int tipo, uint8_t *bytes) {
     Operando o;
     o.tipo = tipo;
     o.codigoRegistro = 0;
+    o.sector = SECTOR_COMPLETO;
+    o.tamanoMemoria = 4;
+    o.modifMemoria = MODIF_MEM_DEFAULT;
     o.desplazamiento = 0;
     o.inmediato = 0;
 
     switch (tipo) {
         case TIPO_REGISTRO:
-            /// 1 byte: 3 bits reservados + 5 bits codigo de registro
+            /// 1 byte: 1 bit reservado (bit 7) + 2 bits sector (bits 6-5) + 5 bits codigo de registro (bits 4-0)
+            o.sector = (bytes[0] >> 5) & 0x03;
             o.codigoRegistro = bytes[0] & 0x1F;
             break;
 
@@ -59,11 +64,28 @@ Operando leerOperando(int tipo, uint8_t *bytes) {
             o.inmediato = (int16_t)((bytes[0] << 8) | bytes[1]);
             break;
 
-        case TIPO_MEMORIA:
-            /// 3 bytes: 2 bytes offset (big-endian) + 1 byte (3 bits reservados + 5 bits registro)
+        case TIPO_MEMORIA: {
+            /// 3 bytes: 2 bytes offset (big-endian) + 1 byte (3 bits cant bytes + 5 bits registro)
             o.desplazamiento = (int16_t)((bytes[0] << 8) | bytes[1]);
             o.codigoRegistro = bytes[2] & 0x1F;
+            o.modifMemoria = (bytes[2] >> 5) & 0x07;
+            switch (o.modifMemoria) {
+                case MODIF_MEM_BYTE:    // 001: 1 byte (b[])
+                    o.tamanoMemoria = 1;
+                    break;
+                case MODIF_MEM_WORD:    // 010: 2 bytes (w[])
+                    o.tamanoMemoria = 2;
+                    break;
+                case MODIF_MEM_LONG:    // 100: 4 bytes (l[])
+                case MODIF_MEM_DEFAULT: // 000: 4 bytes (compatibilidad MV1 y [])
+                    o.tamanoMemoria = 4;
+                    break;
+                default:
+                    reportarError(ERROR_INSTRUCCION_INVALIDA);
+                    break;
+            }
             break;
+        }
 
         case TIPO_NINGUNO:
         default:
@@ -71,4 +93,35 @@ Operando leerOperando(int tipo, uint8_t *bytes) {
     }
 
     return o;
+}
+
+int obtenerTamanoOperando(Operando o) {
+    switch (o.tipo) {
+        case TIPO_REGISTRO:
+            switch (o.sector) {
+                case SECTOR_BYTE_BAJO:
+                case SECTOR_BYTE_ALTO:
+                    return 1;
+                case SECTOR_WORD_BAJO:
+                    return 2;
+                case SECTOR_COMPLETO:
+                default:
+                    return 4;
+            }
+        case TIPO_MEMORIA:
+            return o.tamanoMemoria;
+        case TIPO_INMEDIATO:
+            return 2;
+        default:
+            return 4;
+    }
+}
+
+uint32_t truncarYExtenderSigno(uint32_t val, int tamanoBytes) {
+    if (tamanoBytes == 1) {
+        return (uint32_t)(int32_t)(int8_t)(val & 0xFF);
+    } else if (tamanoBytes == 2) {
+        return (uint32_t)(int32_t)(int16_t)(val & 0xFFFF);
+    }
+    return val;
 }

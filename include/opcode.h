@@ -21,7 +21,7 @@
 #define OPCODE_LDH   0x1E
 #define OPCODE_RND   0x1F
 
-// Instrucciones con 1 operando (0x00 - 0x0A)
+// Instrucciones con 1 operando (0x00 - 0x0D)
 #define OPCODE_SYS   0x00
 #define OPCODE_JMP   0x01
 #define OPCODE_JP    0x02
@@ -33,8 +33,12 @@
 #define OPCODE_JNN   0x08
 #define OPCODE_JNZ   0x09
 #define OPCODE_NOT   0x0A
+#define OPCODE_PUSH  0x0B
+#define OPCODE_POP   0x0C
+#define OPCODE_CALL  0x0D
 
-// Instrucciones sin operandos (0x0F)
+// Instrucciones sin operandos (0x0E - 0x0F)
+#define OPCODE_RET   0x0E
 #define OPCODE_STOP  0x0F
 
 #endif // OPCODE_H

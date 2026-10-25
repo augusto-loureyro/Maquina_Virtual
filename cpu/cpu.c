@@ -51,10 +51,14 @@ Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r) {
 }
 
 static dirLogica calcularDirLogica(uint32_t regValor, int16_t desplazamiento) {
+    if (regValor == 0xFFFFFFFF) {
+        /// Registro de segmento inexistente o direccion nula (-1)
+        reportarError(ERROR_FALLO_DE_SEGMENTO);
+    }
     uint32_t segmento = regValor >> 16;
     int32_t offset = (int32_t)(uint16_t)(regValor & 0xFFFF) + desplazamiento;
-    if (offset < 0) {
-        /// Acceso por debajo de la base del segmento
+    if (offset < 0 || offset > 0xFFFF) {
+        /// Acceso por debajo de la base del segmento o desborde de 16 bits
         reportarError(ERROR_FALLO_DE_SEGMENTO);
     }
     return (segmento << 16) | (uint16_t)offset;
@@ -65,16 +69,54 @@ uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r
     dirFisica f;
 
     switch (o.tipo) {
-        case TIPO_REGISTRO:
-            return r[o.codigoRegistro];
+        case TIPO_REGISTRO: {
+            uint32_t valReg = r[o.codigoRegistro];
+            switch (o.sector) {
+                case SECTOR_COMPLETO:
+                    return valReg;
+
+                case SECTOR_BYTE_BAJO: {
+                    int8_t byteBajo = (int8_t)(valReg & 0xFF);
+                    return (uint32_t)(int32_t)byteBajo;
+                }
+
+                case SECTOR_BYTE_ALTO: {
+                    int8_t byteAlto = (int8_t)((valReg >> 8) & 0xFF);
+                    return (uint32_t)(int32_t)byteAlto;
+                }
+
+                case SECTOR_WORD_BAJO: {
+                    int16_t wordBajo = (int16_t)(valReg & 0xFFFF);
+                    return (uint32_t)(int32_t)wordBajo;
+                }
+
+                default:
+                    return valReg;
+            }
+        }
 
         case TIPO_INMEDIATO:
             return (uint32_t)(int32_t)o.inmediato;
 
-        case TIPO_MEMORIA:
+        case TIPO_MEMORIA: {
             l = calcularDirLogica(r[o.codigoRegistro], o.desplazamiento);
-            f = traducir(l, t, r, TAMANIO_DATO, 1);     // Carga LAR y MAR
-            return leerDeMemoria(m, f, TAMANIO_DATO, r); // Carga MBR
+            f = traducir(l, t, r, o.tamanoMemoria, 1);     // Carga LAR y MAR con la cantidad de bytes
+            uint32_t valMem = leerDeMemoria(m, f, o.tamanoMemoria, r); // Carga MBR
+
+            switch (o.tamanoMemoria) {
+                case 1: {
+                    int8_t b = (int8_t)(valMem & 0xFF);
+                    return (uint32_t)(int32_t)b;
+                }
+                case 2: {
+                    int16_t w = (int16_t)(valMem & 0xFFFF);
+                    return (uint32_t)(int32_t)w;
+                }
+                case 4:
+                default:
+                    return valMem;
+            }
+        }
 
         default:
             reportarError(ERROR_INSTRUCCION_INVALIDA);
@@ -87,15 +129,37 @@ void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memori
     dirFisica f;
 
     switch (o.tipo) {
-        case TIPO_REGISTRO:
-            r[o.codigoRegistro] = valor;
-            break;
+        case TIPO_REGISTRO: {
+            switch (o.sector) {
+                case SECTOR_COMPLETO:
+                    r[o.codigoRegistro] = valor;
+                    break;
 
-        case TIPO_MEMORIA:
-            l = calcularDirLogica(r[o.codigoRegistro], o.desplazamiento);
-            f = traducir(l, t, r, TAMANIO_DATO, 1);
-            escribirEnMemoria(m, f, valor, TAMANIO_DATO, r);
+                case SECTOR_BYTE_BAJO:
+                    r[o.codigoRegistro] = (r[o.codigoRegistro] & 0xFFFFFF00u) | (valor & 0xFFu);
+                    break;
+
+                case SECTOR_BYTE_ALTO:
+                    r[o.codigoRegistro] = (r[o.codigoRegistro] & 0xFFFF00FFu) | ((valor & 0xFFu) << 8);
+                    break;
+
+                case SECTOR_WORD_BAJO:
+                    r[o.codigoRegistro] = (r[o.codigoRegistro] & 0xFFFF0000u) | (valor & 0xFFFFu);
+                    break;
+
+                default:
+                    r[o.codigoRegistro] = valor;
+                    break;
+            }
             break;
+        }
+
+        case TIPO_MEMORIA: {
+            l = calcularDirLogica(r[o.codigoRegistro], o.desplazamiento);
+            f = traducir(l, t, r, o.tamanoMemoria, 1);
+            escribirEnMemoria(m, f, valor, o.tamanoMemoria, r);
+            break;
+        }
 
         default:
             reportarError(ERROR_INSTRUCCION_INVALIDA);
@@ -104,10 +168,18 @@ void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memori
 }
 
 int hayMasInstrucciones(tabla_segmentos t, Registros r) {
-    int segmento = r[REGIP] >> 16;
-    uint16_t offset = r[REGIP] & 0xFFFF;
+    if (r[REGCS] == 0xFFFFFFFF) {
+        return 0;
+    }
+    int segCode = (int)(r[REGCS] >> 16);
+    int segIP = (int)(r[REGIP] >> 16);
+    uint16_t offsetIP = (uint16_t)(r[REGIP] & 0xFFFF);
 
-    return (segmento == CODE) && (offset < obtenerTamanioSegmento(t, CODE));
+    if (!esSegmentoValido(t, segCode)) {
+        return 0;
+    }
+
+    return (segIP == segCode) && (offsetIP < obtenerTamanioSegmento(t, segCode));
 }
 
 void saltarA(uint32_t desplazamiento, Registros r) {
@@ -119,11 +191,14 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
 
     switch (instr.opcode) {
         /// Instrucciones con 2 operandos
-        case OPCODE_MOV:
+        case OPCODE_MOV: {
             valor = leerValorOperando(instr.operandoB, t, m, r);
             escribirValorOperando(instr.operandoA, valor, t, m, r);
-            actualizarFlagsValor(valor, r);
+            int tamA = obtenerTamanoOperando(instr.operandoA);
+            uint32_t valEfectivo = truncarYExtenderSigno(valor, tamA);
+            actualizarFlagsValor(valEfectivo, r);
             break;
+        }
 
         case OPCODE_ADD:
             valor = sumar(leerValorOperando(instr.operandoA, t, m, r),
@@ -176,15 +251,10 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
             uint32_t valA = leerValorOperando(instr.operandoA, t, m, r);
             uint32_t valB = leerValorOperando(instr.operandoB, t, m, r);
 
-            /// Operaciones equivalentes: XOR A, B; XOR B, A; XOR A, B
-            uint32_t paso1 = xor_logico(valA, valB, r);
-            escribirValorOperando(instr.operandoA, paso1, t, m, r);
+            escribirValorOperando(instr.operandoA, valB, t, m, r);
+            escribirValorOperando(instr.operandoB, valA, t, m, r);
 
-            uint32_t paso2 = xor_logico(paso1, valB, r);
-            escribirValorOperando(instr.operandoB, paso2, t, m, r);
-
-            uint32_t paso3 = xor_logico(paso1, paso2, r);
-            escribirValorOperando(instr.operandoA, paso3, t, m, r);
+            xor_logico(valA, valB, r);
             break;
         }
 

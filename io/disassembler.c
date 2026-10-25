@@ -9,17 +9,51 @@
 static void formatearOperando(Operando o, char *buf, size_t tam) {
     switch (o.tipo) {
         case TIPO_REGISTRO:
-            snprintf(buf, tam, "%s", nombreRegistro(o.codigoRegistro));
+            if (o.codigoRegistro >= REGEAX && o.codigoRegistro <= REGEFX) {
+                char regChar = (char)('A' + (o.codigoRegistro - REGEAX));
+                switch (o.sector) {
+                    case SECTOR_COMPLETO:
+                        snprintf(buf, tam, "E%cX", regChar);
+                        break;
+                    case SECTOR_BYTE_BAJO:
+                        snprintf(buf, tam, "%cL", regChar);
+                        break;
+                    case SECTOR_BYTE_ALTO:
+                        snprintf(buf, tam, "%cH", regChar);
+                        break;
+                    case SECTOR_WORD_BAJO:
+                        snprintf(buf, tam, "%cX", regChar);
+                        break;
+                    default:
+                        snprintf(buf, tam, "E%cX", regChar);
+                        break;
+                }
+            } else {
+                snprintf(buf, tam, "%s", nombreRegistro(o.codigoRegistro));
+            }
             break;
+
         case TIPO_INMEDIATO:
             snprintf(buf, tam, "%d", o.inmediato);
             break;
-        case TIPO_MEMORIA:
+
+        case TIPO_MEMORIA: {
+            const char *pref = "";
+            if (o.tamanoMemoria == 1) {
+                pref = "b";
+            } else if (o.tamanoMemoria == 2) {
+                pref = "w";
+            } else if (o.tamanoMemoria == 4 && o.modifMemoria == MODIF_MEM_LONG) {
+                pref = "l";
+            }
+
             if (o.desplazamiento >= 0)
-                snprintf(buf, tam, "[%s+%d]", nombreRegistro(o.codigoRegistro), o.desplazamiento);
+                snprintf(buf, tam, "%s[%s+%d]", pref, nombreRegistro(o.codigoRegistro), o.desplazamiento);
             else
-                snprintf(buf, tam, "[%s%d]", nombreRegistro(o.codigoRegistro), o.desplazamiento);
+                snprintf(buf, tam, "%s[%s%d]", pref, nombreRegistro(o.codigoRegistro), o.desplazamiento);
             break;
+        }
+
         default:
             buf[0] = '\0';
             break;
@@ -84,6 +118,10 @@ const char* mnemonico(int opcode) {
         case OPCODE_JNN:  return "JNN";
         case OPCODE_JNZ:  return "JNZ";
         case OPCODE_NOT:  return "NOT";
+        case OPCODE_PUSH: return "PUSH";
+        case OPCODE_POP:  return "POP";
+        case OPCODE_CALL: return "CALL";
+        case OPCODE_RET:  return "RET";
         case OPCODE_STOP: return "STOP";
         case OPCODE_MOV:  return "MOV";
         case OPCODE_ADD:  return "ADD";
@@ -114,6 +152,8 @@ const char* nombreRegistro(int reg) {
         case REGLAR: return "LAR";
         case REGMAR: return "MAR";
         case REGMBR: return "MBR";
+        case REGSP:  return "SP";
+        case REGBP:  return "BP";
         case REGEAX: return "EAX";
         case REGEBX: return "EBX";
         case REGECX: return "ECX";
@@ -124,6 +164,10 @@ const char* nombreRegistro(int reg) {
         case REGCC:  return "CC";
         case REGCS:  return "CS";
         case REGDS:  return "DS";
+        case REGES:  return "ES";
+        case REGSS:  return "SS";
+        case REGKS:  return "KS";
+        case REGPS:  return "PS";
         default:     return "???";
     }
 }

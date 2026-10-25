@@ -159,8 +159,14 @@ uint32_t leerDeMemoria(Memoria m, uint32_t f, int n, Registros r) {
 }
 
 void escribirEnMemoria(Memoria m, uint32_t f, uint32_t valor, int n, Registros r) {
-    r[REGMBR] = valor;
+    uint32_t valorAlmacenado = valor;
+    if (n == 1) {
+        valorAlmacenado = valor & 0xFF;
+    } else if (n == 2) {
+        valorAlmacenado = valor & 0xFFFF;
+    }
+    r[REGMBR] = valorAlmacenado;
     for (int k = 0; k < n; k++) {
-        m[f + k] = (valor >> (8 * (n - 1 - k))) & 0xFF; // Big-endian
+        m[f + k] = (valorAlmacenado >> (8 * (n - 1 - k))) & 0xFF; // Big-endian
     }
 }
