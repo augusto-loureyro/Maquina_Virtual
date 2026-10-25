@@ -9,15 +9,13 @@
 #include "traductor.h"
 #include "alu.h"
 
-// Máscaras de bits para evaluar flags de CC en instrucciones de salto condicional
+// Mascaras de bits para evaluar flags de CC en instrucciones de salto condicional
 #define NMASK (1u << CC_BIT_N)
 #define ZMASK (1u << CC_BIT_Z)
 #define CMASK (1u << CC_BIT_C)
 #define VMASK (1u << CC_BIT_V)
 
-/**
- * @brief Estructura que representa una instrucción completa decodificada.
- */
+
 typedef struct {
     int opcode;
     int categoria;

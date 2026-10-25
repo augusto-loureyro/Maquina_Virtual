@@ -38,7 +38,7 @@ void reportarError(TipoError tipo) {
             mensaje = "Entrada de syscall invalida o fin de archivo (EOF)";
             break;
         case ERROR_MEMORIA_INSUFICIENTE:
-            mensaje = "No se pudo asignar memoria para la RAM";
+            mensaje = "Memoria insuficiente";
             break;
         default:
             mensaje = "Error desconocido";

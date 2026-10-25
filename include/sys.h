@@ -20,11 +20,11 @@
 
 
 typedef struct {
-    dirLogica dirL;     /**< Dirección lógica inicial (EDX) */
-    dirFisica dirF;     /**< Dirección física inicial traducida */
-    uint32_t modo;      /**< Modo de lectura/escritura (EAX) */
-    uint32_t cant;      /**< Cantidad de valores (ECX bajo) */
-    uint32_t tamBytes;  /**< Tamaño de cada valor en bytes (ECX alto: 1..4) */
+    dirLogica dirL;     /** Dirección lógica inicial (EDX) */
+    dirFisica dirF;     /** Dirección física inicial traducida */
+    uint32_t modo;      /** Modo de lectura/escritura (EAX) */
+    uint32_t cant;      /** Cantidad de valores (ECX bajo) */
+    uint32_t tamBytes;  /** Tamaño de cada valor en bytes (ECX alto: 1..4) */
 } ParamSys;
 
 

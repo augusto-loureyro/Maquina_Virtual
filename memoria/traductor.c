@@ -5,7 +5,7 @@ dirFisica traducir(dirLogica l, tabla_segmentos t, Registros r, int cantidadByte
     uint16_t desplazamiento = l & 0xFFFF;
 
     /// Validacion de segmento existente en la tabla
-    if (segmento >= CANT_SEG || obtenerBaseSegmento(t, segmento) == 0xFFFF) {
+    if (!esSegmentoValido(t, segmento)) {
         reportarError(ERROR_FALLO_DE_SEGMENTO);
     }
 

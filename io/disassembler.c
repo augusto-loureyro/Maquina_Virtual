@@ -27,7 +27,7 @@ static void formatearOperando(Operando o, char *buf, size_t tam) {
 }
 
 void mostrarInstruccion(Instruccion instr, Memoria m) {
-    /// 1. Direccion física de inicio: [0000]
+    /// 1. Direccion fisica de inicio: [0000]
     printf("[%04X] ", (unsigned)instr.dirInicio);
 
     /// 2. Bytes en hexadecimal

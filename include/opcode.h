@@ -1,7 +1,7 @@
 #ifndef OPCODE_H
 #define OPCODE_H
 
-/* Códigos de Operación (Opcodes) en hexadecimal según especificación */
+/* Codigos de Operacion (Opcodes) en hexadecimal segun especificacion */
 
 // Instrucciones con 2 operandos (0x10 - 0x1F)
 #define OPCODE_MOV   0x10

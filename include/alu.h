@@ -14,13 +14,13 @@
 void actualizarCC(Registros r, int n, int z, int c, int v);
 void actualizarFlagsValor(uint32_t valor, Registros r);
 
-/* Operaciones Aritméticas (32 bits) */
+/* Operaciones Aritmeticas (32 bits) */
 uint32_t sumar(uint32_t a, uint32_t b, Registros r);
 uint32_t restar(uint32_t a, uint32_t b, Registros r);
 uint32_t multiplicar(uint32_t a, uint32_t b, Registros r);
 uint32_t dividir(uint32_t a, uint32_t b, Registros r);
 
-/* Operaciones Lógicas Bit a Bit */
+/* Operaciones Logicas Bit a Bit */
 uint32_t and_logico(uint32_t a, uint32_t b, Registros r);
 uint32_t or_logico(uint32_t a, uint32_t b, Registros r);
 uint32_t xor_logico(uint32_t a, uint32_t b, Registros r);
