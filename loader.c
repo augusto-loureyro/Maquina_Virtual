@@ -1,31 +1,65 @@
-// básico: Abre el archivo binario y lee la cabecera, comprobando identificador, version, y obteniendo code_size.
-
 #include "include/loader.h"
+#include "include/memoria.h"
 
-void procesarHeader(const char *nombreArchivo, uint8_t *version, uint16_t *code_size){
-    FILE *archVMX;
-    uint8_t header[8];
+static int leerUint16BigEndian(FILE *archivo, uint16_t *valor) {
+    uint8_t bytes[2];
 
-    if((archVMX = fopen(nombreArchivo, "rb")) == NULL){
+    if (fread(bytes, sizeof(bytes[0]), sizeof(bytes), archivo) != sizeof(bytes)) {
+        return 0;
+    }
+
+    *valor = ((uint16_t)bytes[0] << 8) | bytes[1];
+    return 1;
+}
+
+void procesarHeaderVMX(const char *nombreArchivo, Header *hdr) {
+    FILE *archivo;
+    uint8_t id[5];
+
+    if (nombreArchivo == NULL || hdr == NULL) {
+        reportarError(ERROR_ARGUMENTOS_INVALIDOS);
+    }
+
+    memset(hdr, 0, sizeof(*hdr));
+
+    archivo = fopen(nombreArchivo, "rb");
+    if (archivo == NULL) {
         reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
     }
 
-    if(fread(header, 1, 8, archVMX) != 8){
-        fclose(archVMX);
+    if (fread(id, sizeof(id[0]), sizeof(id), archivo) != sizeof(id) ||
+        fread(&hdr->version, sizeof(hdr->version), 1, archivo) != 1) {
+        fclose(archivo);
         reportarError(ERROR_ENCABEZADO_INVALIDO);
     }
 
-    if(memcmp(header, "VMX26", 5) != 0){
-        fclose(archVMX);
+    if (memcmp(id, "VMX26", sizeof(id)) != 0) {
+        fclose(archivo);
         reportarError(ERROR_ENCABEZADO_INVALIDO);
     }
 
-    *version = header[5];
-    if(*version != 1){
-        fclose(archVMX);
+    if (hdr->version != 1 && hdr->version != 2) {
+        fclose(archivo);
         reportarError(ERROR_VERSION_NO_SOPORTADA);
     }
 
-    *code_size = (header[6] << 8) | header[7];
-    fclose(archVMX);
+    if (hdr->version == 1) {
+        if (!leerUint16BigEndian(archivo, &hdr->sizeCS) ||
+            hdr->sizeCS > TAMANIO_MEMORIA_DEFAULT) {
+            fclose(archivo);
+            reportarError(ERROR_ENCABEZADO_INVALIDO);
+        }
+
+        hdr->sizeDS = TAMANIO_MEMORIA_DEFAULT - hdr->sizeCS;
+    } else if (!leerUint16BigEndian(archivo, &hdr->sizeCS) ||
+               !leerUint16BigEndian(archivo, &hdr->sizeDS) ||
+               !leerUint16BigEndian(archivo, &hdr->sizeES) ||
+               !leerUint16BigEndian(archivo, &hdr->sizeSS) ||
+               !leerUint16BigEndian(archivo, &hdr->sizeKS) ||
+               !leerUint16BigEndian(archivo, &hdr->offsetEP)) {
+        fclose(archivo);
+        reportarError(ERROR_ENCABEZADO_INVALIDO);
+    }
+
+    fclose(archivo);
 }

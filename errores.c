@@ -14,6 +14,9 @@ void reportarError(TipoError tipo) {
         case ERROR_TAMANIO_SYS:           mensaje = "Tamanio de syscall invalido"; break;
         case ERROR_ENTRADA_SYS:           mensaje = "Entrada de syscall invalida"; break;
         case ERROR_ARGUMENTOS_INVALIDOS:  mensaje = "comando invalido"; break;
+        case ERROR_MEMORIA_INSUFICIENTE:  mensaje = "memoria insuficiente"; break;
+        case ERROR_STACK_OVERFLOW:        mensaje = "stack overflow, memoria insuficiente en la pila"; break;
+        case ERROR_STACK_UNDERFLOW:       mensaje = "stack underflow, pila vacia o inaccesible"; break;
         default:                          mensaje = "Error desconocido"; break;
     }
     fprintf(stderr, "Error: %s \n", mensaje);

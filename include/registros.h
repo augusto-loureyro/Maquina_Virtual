@@ -2,7 +2,7 @@
 #define REGISTROS_H
 
 #include <stdint.h>
-#include "tablaSegmentos.h"
+#include "IndiceSegmentos.h"
 
 
 #define CANT_REGISTROS 32
@@ -49,9 +49,6 @@
 
 typedef uint32_t Registros[CANT_REGISTROS];
 
-void inicializarRegistros(Registros r);
-uint32_t LCL2(uint32_t b, uint16_t l);
-uint32_t LCH2(uint32_t b, uint16_t h);
-
+void inicializarRegistros(Registros r,IndiceSgm index);
 
 #endif

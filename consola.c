@@ -30,7 +30,7 @@ void parsearArgumentos(int argc, char *argv[], Config *cfg) {
         } else if (strcmp(argv[i], "-p") == 0) {
             cfg->flagP = 1;
             for (int j = i + 1; j < argc; j++) {
-                cfg->p[cfg->nP++] = atoi(argv[j]);
+                cfg->p[cfg->nP++]=argv[j];
             }
             break; // después de -p, todo lo que sigue son parámetros
         } else {

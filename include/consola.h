@@ -10,7 +10,7 @@ typedef struct{
     int flagM;
     int flagP;
     int sizeM;     // tamaño de memoria leído con m=
-    int p[100];    // parámetros enteros (asumo por ahora)
+    char *p[100];    
     int nP;        // cantidad de parámetros
 } Config;
 

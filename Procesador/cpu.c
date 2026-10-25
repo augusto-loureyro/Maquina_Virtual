@@ -87,11 +87,11 @@ void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memori
 }
 
  
-int hayMasInstrucciones(tabla_segmentos t, Registros r){
+int hayMasInstrucciones(tabla_segmentos t, Registros r,IndiceSgm index){
     int segmento = r[REGIP] >> 16;
     uint16_t offset = r[REGIP] & 0xFFFF;
  
-    return (segmento == CODE) && (offset < obtenerTamanioSegmento(t, CODE));
+    return (segmento == index.cs) && (offset < obtenerTamanioSegmento(t, index.cs));
 }
 
 void saltarA(uint32_t desplazamiento, Registros r){
@@ -227,8 +227,8 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
     }
 }
  
-void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r,int flagD){
-    while (hayMasInstrucciones(t, r)){
+void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r, int flagD, IndiceSgm index){
+    while (hayMasInstrucciones(t, r, index)){
         Instruccion instr = buscarInstruccion(t, m, r);
         if(flagD)
             mostrarInstruccion(instr,m);

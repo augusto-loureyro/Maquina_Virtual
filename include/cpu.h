@@ -7,6 +7,7 @@
 #include "registros.h"
 #include "traductor.h"
 #include "alu.h"
+#include "IndiceSegmentos.h"
 
 #define NMASK (1u << CC_BIT_N)
 #define ZMASK (1u << CC_BIT_Z)
@@ -26,10 +27,10 @@ uint32_t armarRegistroOperando(int tipo, uint8_t *bytes);
 Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r);
 uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r);
 void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memoria m, Registros r);
-int hayMasInstrucciones(tabla_segmentos t, Registros r);
+int hayMasInstrucciones(tabla_segmentos t, Registros r,IndiceSgm index);
 void saltarA(uint32_t desplazamiento, Registros r);
 void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r);
-void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r,int flagD);
+void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r,int flagD, IndiceSgm index);
 uint32_t LDH(uint32_t b, uint16_t h);
 uint32_t LDL(uint32_t b, uint16_t l);
 
