@@ -1,1 +1,15 @@
-vmx.exe
+# Build outputs
+bin/
+obj/
+*.exe
+*.o
+*.out
+
+# Editor and temporary files
+.vscode/
+*.depend
+*.layout
+*.swp
+*.bak
+err.txt
+out.txt
