@@ -16,8 +16,8 @@
 #define REGLAR 4
 #define REGMAR 5
 #define REGMBR 6
-//#define REG 7
-//#define REG 8
+#define REGSP 7
+#define REGBP 8
 //#define REG 9
 /// Registros de propositos generales
 #define REGEAX 10
@@ -38,13 +38,13 @@
 //#define REG 23
 //#define REG 24
 //#define REG 25
-/// Segmenos
+/// Segmentos
 #define REGCS  26
 #define REGDS  27
-//#define REG 28
-//#define REG 29
-//#define REG 30
-//#define REG 31
+#define REGES 28
+#define REGSS 29
+#define REGKS 30
+#define REGPS 31
 
 
 typedef uint32_t Registros[CANT_REGISTROS];

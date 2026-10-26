@@ -159,10 +159,7 @@ uint32_t shift_izq(uint32_t a, uint32_t b, Registros r){
         resultado = a;  
     } else if (b < 32) {
         resultado = a << b;
-        //c = (a >> (32 - b)) & 1u;           // último bit que "salió" por la izquierda
-
-        uint32_t bitsQueSalen = a & (0xFFFFFFFFu << (32 - b)); // los b bits más altos de a
-        c = (bitsQueSalen != 0);
+        c = (a >> (32 - b)) & 1u;   // último bit que "salió" por la izquierda
 
         // valor exacto (sin truncar) vs. valor truncado a 32 bits
         int64_t exacto = (int64_t)(int32_t)a * (1LL << b);

@@ -83,6 +83,7 @@ int main(int argc, char *argv[]) {
     imprimirTablaSegmentos(tabla);
     inicializarRegistros(registros, indices);
     registros[REGIP] = ((uint32_t)indices.cs << 16) | config.header.entry_point;
+    registros[REGSP] = ((uint32_t)indices.ss << 16) | config.header.stack_size;
     imprimirRegistros("Registros iniciales:", registros);
 
     printf("\nEjecutando programa...\n");

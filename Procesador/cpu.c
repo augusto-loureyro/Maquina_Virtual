@@ -98,7 +98,7 @@ void saltarA(uint32_t desplazamiento, Registros r){
     r[REGIP] = (r[REGIP] & 0xFFFF0000) | (desplazamiento & 0xFFFF);
 }
  
-void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r){
+void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r, IndiceSgm index){
     uint32_t valor;
  
     switch (instr.opcode){
@@ -171,8 +171,13 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
             escribirValorOperando(instr.operandoA,valor,t,m,r);
             break; 
         case OPCODE_RND:
-            uint32_t limite = leerValorOperando(instr.operandoB, t, m, r);
-            valor = (limite == 0xFFFFFFFF) ? (uint32_t)rand() : rand() % (limite + 1); //para evitar el remotísimo caso de división por 0
+            uint32_t valB = leerValorOperando(instr.operandoB, t, m, r);
+
+            if (valB >= 0)
+                valor = rand() % (valB + 1);
+            else
+                valor = -(rand() % (-valB + 1));
+            escribirValorOperando(instr.operandoA,valor,t,m,r);
             break;
         // 1 operandos
         case OPCODE_SYS:
@@ -217,7 +222,20 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Regist
             valor = not_logico(leerValorOperando(instr.operandoA, t, m, r),r);
             escribirValorOperando(instr.operandoA,valor,t,m,r);
             break;
+        case OPCODE_PUSH:
+            push(leerValorOperando(instr.operandoA, t, m, r),r,m,t,index);
+            break;
+        case OPCODE_POP:
+            escribirValorOperando(instr.operandoA, pop(r,m,t,index),t,m,r);
+            break;
+        case OPCODE_CALL:
+            push(r[REGIP],r,m,t,index);
+            saltarA(leerValorOperando(instr.operandoA, t, m, r),r);
+            break;
         // 0 operandos
+        case OPCODE_RET:
+            saltarA(pop(r,m,t,index),r);
+            break;
         case OPCODE_STOP:
             r[REGIP] = 0xFFFFFFFF;
             break;
@@ -232,7 +250,7 @@ void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r, int flagD, Indi
         Instruccion instr = buscarInstruccion(t, m, r);
         if(flagD)
             mostrarInstruccion(instr,m);
-        ejecutarInstruccion(instr, t, m, r);
+        ejecutarInstruccion(instr, t, m, r, index);
     }
 }
 
@@ -245,4 +263,24 @@ uint32_t LDL(uint32_t b, uint16_t l){
     b &= 0xFFFF0000;   // borro la parte baja
     b |= l;            // cargo la nueva parte baja
     return b;
+}
+
+void push(uint32_t valor, Registros r, Memoria m, tabla_segmentos t, IndiceSgm index) {
+    if (r[REGSP] & 0xFFFF == 0)
+        reportarError(ERROR_STACK_OVERFLOW);
+
+    r[REGSP] -= TAMANIO_DATO;
+
+    escribirEnMemoria(m,traducir(r[REGSP],t,r,TAMANIO_DATO,1),valor,TAMANIO_DATO,r);
+}
+
+uint32_t pop(Registros r, Memoria m, tabla_segmentos t, IndiceSgm index) {
+    uint32_t valor;
+
+    if ((r[REGSP] & 0xFFFF) + TAMANIO_DATO >= obtenerTamanioSegmento(t, index.ss))
+        reportarError(ERROR_STACK_UNDERFLOW);
+
+    valor = leerDeMemoria(m,traducir(r[REGSP],t,r,TAMANIO_DATO,1),TAMANIO_DATO,r);
+    r[REGSP] += TAMANIO_DATO;
+    return valor;
 }

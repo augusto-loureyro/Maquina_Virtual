@@ -28,6 +28,10 @@
 #define OPCODE_JNN  0x08
 #define OPCODE_JNZ  0x09
 #define OPCODE_NOT  0x0A
+#define OPCODE_PUSH 0x0B
+#define OPCODE_POP  0x0C
+#define OPCODE_CALL 0x0D
 
 // 0 operandos
+#define OPCODE_RET  0x0E
 #define OPCODE_STOP 0x0F

@@ -29,10 +29,12 @@ uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r
 void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memoria m, Registros r);
 int hayMasInstrucciones(tabla_segmentos t, Registros r,IndiceSgm index);
 void saltarA(uint32_t desplazamiento, Registros r);
-void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r);
+void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r, IndiceSgm index);
 void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r,int flagD, IndiceSgm index);
 uint32_t LDH(uint32_t b, uint16_t h);
 uint32_t LDL(uint32_t b, uint16_t l);
+void push(uint32_t valor, Registros r, Memoria m, tabla_segmentos t, IndiceSgm index);
+uint32_t pop(Registros r, Memoria m, tabla_segmentos t, IndiceSgm index);
 
 #endif
 
