@@ -6,21 +6,21 @@
 #include "loader.h"
 #include "errores.h"
 
-void reservarMemoria(Memoria *m, uint32_t tamanioM) {
-    *m = (uint8_t *)calloc(tamanioM, sizeof(uint8_t));
-    if (*m == NULL) {
+void reservarMemoria(Memoria *memoria, uint32_t tamanioM) {
+    *memoria = (uint8_t *)calloc(tamanioM, sizeof(uint8_t));
+    if (*memoria == NULL) {
         reportarError(ERROR_MEMORIA_INSUFICIENTE);
     }
 }
 
-void liberarMemoria(Memoria *m) {
-    if (m != NULL && *m != NULL) {
-        free(*m);
-        *m = NULL;
+void liberarMemoria(Memoria *memoria) {
+    if (memoria != NULL && *memoria != NULL) {
+        free(*memoria);
+        *memoria = NULL;
     }
 }
 
-void cargarMemoriaV1(const char *nombreArchivo, Memoria m, uint16_t code_size) {
+void cargarMemoriaV1(const char *nombreArchivo, Memoria memoria, uint16_t code_size) {
     FILE *archVMX = fopen(nombreArchivo, "rb");
 
     if (archVMX == NULL) {
@@ -35,7 +35,7 @@ void cargarMemoriaV1(const char *nombreArchivo, Memoria m, uint16_t code_size) {
         reportarError(ERROR_FALLO_DE_SEGMENTO); // El codigo no cabe en la memoria fisica
     }
 
-    if (fread(m, 1, code_size, archVMX) != code_size) {
+    if (fread(memoria, 1, code_size, archVMX) != code_size) {
         fclose(archVMX);
         reportarError(ERROR_ENCABEZADO_INVALIDO); // Archivo truncado
     }
@@ -43,7 +43,7 @@ void cargarMemoriaV1(const char *nombreArchivo, Memoria m, uint16_t code_size) {
     fclose(archVMX);
 }
 
-void cargarMemoriaV2(const char *nombreArchivo, Memoria m, uint32_t tamanoRAM, const tabla_segmentos t, const Registros r, const HeaderVMX *header) {
+void cargarMemoriaV2(const char *nombreArchivo, Memoria memoria, uint32_t tamanoRAM, const tabla_segmentos tablaSegmentos, const Registros registros, const HeaderVMX *header) {
     FILE *archVMX = fopen(nombreArchivo, "rb");
 
     if (archVMX == NULL) {
@@ -55,9 +55,9 @@ void cargarMemoriaV2(const char *nombreArchivo, Memoria m, uint32_t tamanoRAM, c
             reportarError(ERROR_ENCABEZADO_INVALIDO);
         }else{
             /// 1. Cargar byte a byte el Code Segment
-            if (r[REGCS] != 0xFFFFFFFF && header->code_size > 0) {
-                int segCode = (int)(r[REGCS] >> 16);
-                uint32_t baseCode = obtenerBaseSegmento(t, segCode);
+            if (registros[REGCS] != 0xFFFFFFFF && header->code_size > 0) {
+                int segCode = (int)(registros[REGCS] >> 16);
+                uint32_t baseCode = obtenerBaseSegmento(tablaSegmentos, segCode);
 
                 for (uint16_t i = 0; i < header->code_size; i++) {
                     int byteLeido = fgetc(archVMX);
@@ -70,14 +70,14 @@ void cargarMemoriaV2(const char *nombreArchivo, Memoria m, uint32_t tamanoRAM, c
                         fclose(archVMX);
                         reportarError(ERROR_FALLO_DE_SEGMENTO); // Escritura fuera de RAM
                     }
-                    m[dirFisica] = (uint8_t)byteLeido;
+                    memoria[dirFisica] = (uint8_t)byteLeido;
                 }
             }
 
             /// 2. Cargar byte a byte el Const Segment
-            if (r[REGKS] != 0xFFFFFFFF && header->const_size > 0) {
-                int segConst = (int)(r[REGKS] >> 16);
-                uint32_t baseConst = obtenerBaseSegmento(t, segConst);
+            if (registros[REGKS] != 0xFFFFFFFF && header->const_size > 0) {
+                int segConst = (int)(registros[REGKS] >> 16);
+                uint32_t baseConst = obtenerBaseSegmento(tablaSegmentos, segConst);
 
                 for (uint16_t i = 0; i < header->const_size; i++) {
                     int byteLeido = fgetc(archVMX);
@@ -90,7 +90,7 @@ void cargarMemoriaV2(const char *nombreArchivo, Memoria m, uint32_t tamanoRAM, c
                         fclose(archVMX);
                         reportarError(ERROR_FALLO_DE_SEGMENTO); // Escritura fuera de RAM
                     }
-                    m[dirFisica] = (uint8_t)byteLeido;
+                    memoria[dirFisica] = (uint8_t)byteLeido;
                 }
             }
 
@@ -99,12 +99,12 @@ void cargarMemoriaV2(const char *nombreArchivo, Memoria m, uint32_t tamanoRAM, c
     }
 }
 
-void cargarParamSegment(const ConfiguracionMV *cfg, Memoria m, const tabla_segmentos t, const Registros r) {
-    if (r[REGPS] == 0xFFFFFFFF || !cfg->flagP || cfg->archVMX == NULL) {
+void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla_segmentos tablaSegmentos, const Registros registros) {
+    if (registros[REGPS] == 0xFFFFFFFF || !cfg->flagP || cfg->archVMX == NULL) {
         return;
     }else{
-        int segParam = (int)(r[REGPS] >> 16);
-        uint32_t baseParam = obtenerBaseSegmento(t, segParam);
+        int segParam = (int)(registros[REGPS] >> 16);
+        uint32_t baseParam = obtenerBaseSegmento(tablaSegmentos, segParam);
 
         int argc = 1 + cfg->cantParams;
         uint16_t *offsets = (uint16_t *)malloc(argc * sizeof(uint16_t));
@@ -118,7 +118,7 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria m, const tabla_segme
             offsets[0] = (uint16_t)offsetActual;
             size_t lenVMX = strlen(cfg->archVMX);
             for (size_t i = 0; i <= lenVMX; i++) {
-                m[baseParam + offsetActual + i] = (uint8_t)cfg->archVMX[i];
+                memoria[baseParam + offsetActual + i] = (uint8_t)cfg->archVMX[i];
             }
             offsetActual += (uint32_t)(lenVMX + 1);
 
@@ -127,7 +127,7 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria m, const tabla_segme
                 offsets[1 + i] = (uint16_t)offsetActual;
                 size_t lenP = strlen(cfg->params[i]);
                 for (size_t j = 0; j <= lenP; j++) {
-                    m[baseParam + offsetActual + j] = (uint8_t)cfg->params[i][j];
+                    memoria[baseParam + offsetActual + j] = (uint8_t)cfg->params[i][j];
                 }
                 offsetActual += (uint32_t)(lenP + 1);
             }
@@ -137,10 +137,10 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria m, const tabla_segme
             /// 16 bits menos significativos = offset del string dentro de Param Segment
             for (int i = 0; i < argc; i++) {
                 uint32_t ptrAddr = baseParam + offsetActual;
-                m[ptrAddr + 0] = 0x00;
-                m[ptrAddr + 1] = 0x00;
-                m[ptrAddr + 2] = (uint8_t)((offsets[i] >> 8) & 0xFF);
-                m[ptrAddr + 3] = (uint8_t)(offsets[i] & 0xFF);
+                memoria[ptrAddr + 0] = 0x00;
+                memoria[ptrAddr + 1] = 0x00;
+                memoria[ptrAddr + 2] = (uint8_t)((offsets[i] >> 8) & 0xFF);
+                memoria[ptrAddr + 3] = (uint8_t)(offsets[i] & 0xFF);
                 offsetActual += 4;
             }
 
@@ -149,24 +149,24 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria m, const tabla_segme
     }
 }
 
-uint32_t leerDeMemoria(Memoria m, uint32_t f, int n, Registros r) {
+uint32_t leerDeMemoria(Memoria memoria, uint32_t dirFisica, int cantidadBytes, Registros registros) {
     uint32_t valor = 0;
-    for (int k = 0; k < n; k++) {
-        valor = (valor << 8) | m[f + k]; // Big-endian
+    for (int k = 0; k < cantidadBytes; k++) {
+        valor = (valor << 8) | memoria[dirFisica + k]; // Big-endian
     }
-    r[REGMBR] = valor;
+    registros[REGMBR] = valor;
     return valor;
 }
 
-void escribirEnMemoria(Memoria m, uint32_t f, uint32_t valor, int n, Registros r) {
+void escribirEnMemoria(Memoria memoria, uint32_t dirFisica, uint32_t valor, int cantidadBytes, Registros registros) {
     uint32_t valorAlmacenado = valor;
-    if (n == 1) {
+    if (cantidadBytes == 1) {
         valorAlmacenado = valor & 0xFF;
-    } else if (n == 2) {
+    } else if (cantidadBytes == 2) {
         valorAlmacenado = valor & 0xFFFF;
     }
-    r[REGMBR] = valorAlmacenado;
-    for (int k = 0; k < n; k++) {
-        m[f + k] = (valorAlmacenado >> (8 * (n - 1 - k))) & 0xFF; // Big-endian
+    registros[REGMBR] = valorAlmacenado;
+    for (int k = 0; k < cantidadBytes; k++) {
+        memoria[dirFisica + k] = (valorAlmacenado >> (8 * (cantidadBytes - 1 - k))) & 0xFF; // Big-endian
     }
 }

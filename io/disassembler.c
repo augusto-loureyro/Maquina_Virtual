@@ -6,12 +6,12 @@
 #include "registros.h"
 #include "opcode.h"
 
-static void formatearOperando(Operando o, char *buf, size_t tam) {
-    switch (o.tipo) {
+static void formatearOperando(Operando operando, char *buf, size_t tam) {
+    switch (operando.tipo) {
         case TIPO_REGISTRO:
-            if (o.codigoRegistro >= REGEAX && o.codigoRegistro <= REGEFX) {
-                char regChar = (char)('A' + (o.codigoRegistro - REGEAX));
-                switch (o.sector) {
+            if (operando.codigoRegistro >= REGEAX && operando.codigoRegistro <= REGEFX) {
+                char regChar = (char)('A' + (operando.codigoRegistro - REGEAX));
+                switch (operando.sector) {
                     case SECTOR_COMPLETO:
                         snprintf(buf, tam, "E%cX", regChar);
                         break;
@@ -29,28 +29,28 @@ static void formatearOperando(Operando o, char *buf, size_t tam) {
                         break;
                 }
             } else {
-                snprintf(buf, tam, "%s", nombreRegistro(o.codigoRegistro));
+                snprintf(buf, tam, "%s", nombreRegistro(operando.codigoRegistro));
             }
             break;
 
         case TIPO_INMEDIATO:
-            snprintf(buf, tam, "%d", o.inmediato);
+            snprintf(buf, tam, "%d", operando.inmediato);
             break;
 
         case TIPO_MEMORIA: {
             const char *pref = "";
-            if (o.tamanoMemoria == 1) {
+            if (operando.tamanoMemoria == 1) {
                 pref = "b";
-            } else if (o.tamanoMemoria == 2) {
+            } else if (operando.tamanoMemoria == 2) {
                 pref = "w";
-            } else if (o.tamanoMemoria == 4 && o.modifMemoria == MODIF_MEM_LONG) {
+            } else if (operando.tamanoMemoria == 4 && operando.modifMemoria == MODIF_MEM_LONG) {
                 pref = "l";
             }
 
-            if (o.desplazamiento >= 0)
-                snprintf(buf, tam, "%s[%s+%d]", pref, nombreRegistro(o.codigoRegistro), o.desplazamiento);
+            if (operando.desplazamiento >= 0)
+                snprintf(buf, tam, "%s[%s+%d]", pref, nombreRegistro(operando.codigoRegistro), operando.desplazamiento);
             else
-                snprintf(buf, tam, "%s[%s%d]", pref, nombreRegistro(o.codigoRegistro), o.desplazamiento);
+                snprintf(buf, tam, "%s[%s%d]", pref, nombreRegistro(operando.codigoRegistro), operando.desplazamiento);
             break;
         }
 
@@ -60,14 +60,14 @@ static void formatearOperando(Operando o, char *buf, size_t tam) {
     }
 }
 
-void mostrarInstruccion(Instruccion instr, Memoria m) {
+void mostrarInstruccion(Instruccion instr, Memoria memoria) {
     /// 1. Direccion fisica de inicio: [0000]
     printf("[%04X] ", (unsigned)instr.dirInicio);
 
     /// 2. Bytes en hexadecimal
     int caracteresHex = 0;
     for (int i = 0; i < instr.largoTotal; i++) {
-        printf("%02X ", m[instr.dirInicio + i]);
+        printf("%02X ", memoria[instr.dirInicio + i]);
         caracteresHex += 3;
     }
 

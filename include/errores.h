@@ -16,7 +16,9 @@ typedef enum {
     ERROR_MODO_SYS,                /** Modo de lectura/escritura de syscall no soportado */
     ERROR_SYS_INVALIDA,            /** Numero de syscall distinto de READ (1) o WRITE (2) */
     ERROR_ENTRADA_SYS,             /** Error o fin de archivo (EOF) al leer entrada en syscall READ */
-    ERROR_MEMORIA_INSUFICIENTE     /** Memoria principal insuficiente para alojar los segmentos o fallo al reservar RAM */
+    ERROR_MEMORIA_INSUFICIENTE,    /** Memoria principal insuficiente para alojar los segmentos o fallo al reservar RAM */
+    ERROR_STACK_OVERFLOW,          /** Desborde de pila: PUSH o CALL sin espacio suficiente en la pila */
+    ERROR_STACK_UNDERFLOW          /** Pila vacia o bytes insuficientes al ejecutar POP o RET */
 } TipoError;
 
 /**

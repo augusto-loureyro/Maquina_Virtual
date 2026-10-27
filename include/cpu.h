@@ -8,6 +8,7 @@
 #include "registros.h"
 #include "traductor.h"
 #include "alu.h"
+#include "pila.h"
 
 // Mascaras de bits para evaluar flags de CC en instrucciones de salto condicional
 #define NMASK (1u << CC_BIT_N)
@@ -26,14 +27,14 @@ typedef struct {
 } Instruccion;
 
 uint32_t armarRegistroOperando(int tipo, uint8_t *bytes);
-Instruccion buscarInstruccion(tabla_segmentos t, Memoria m, Registros r);
-uint32_t leerValorOperando(Operando o, tabla_segmentos t, Memoria m, Registros r);
-void escribirValorOperando(Operando o, uint32_t valor, tabla_segmentos t, Memoria m, Registros r);
-int hayMasInstrucciones(tabla_segmentos t, Registros r);
-void saltarA(uint32_t desplazamiento, Registros r);
-void ejecutarInstruccion(Instruccion instr, tabla_segmentos t, Memoria m, Registros r);
-void ejecutarPrograma(tabla_segmentos t, Memoria m, Registros r, int flagD);
-uint32_t LDH(uint32_t b, uint16_t h);
-uint32_t LDL(uint32_t b, uint16_t l);
+Instruccion buscarInstruccion(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
+uint32_t leerValorOperando(Operando operando, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
+void escribirValorOperando(Operando operando, uint32_t valor, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
+int hayMasInstrucciones(tabla_segmentos tablaSegmentos, Registros registros);
+void saltarA(uint32_t desplazamiento, Registros registros);
+void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
+void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, int flagD);
+uint32_t LDH(uint32_t valorBase, uint16_t parteAlta);
+uint32_t LDL(uint32_t valorBase, uint16_t parteBaja);
 
 #endif // CPU_H

@@ -44,7 +44,7 @@ void decodificarPrimerByte(uint8_t primerByte, int *opcode, int *categoria);
 void extraerTiposOperando(uint8_t primerByte, int categoria, int *tipoA, int *tipoB);
 int tamanioOperando(int tipo);
 Operando leerOperando(int tipo, uint8_t *bytes);
-int obtenerTamanoOperando(Operando o);
+int obtenerTamanoOperando(Operando operando);
 uint32_t truncarYExtenderSigno(uint32_t val, int tamanoBytes);
 
 #endif // DECODIFICADOR_H

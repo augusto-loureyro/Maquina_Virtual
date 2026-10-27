@@ -58,7 +58,7 @@ typedef uint32_t Registros[CANT_REGISTROS];
  * - DS: 16 bits altos = indice de segmento DATA (1), 16 bits bajos = 0.
  * - IP: igual al valor inicial de CS.
  */
-void inicializarRegistrosV1(Registros r);
+void inicializarRegistrosV1(Registros registros);
 
 /**
  * Inicializa los 32 registros en 0 para un proceso MV2:
@@ -67,11 +67,11 @@ void inicializarRegistrosV1(Registros r);
  * - SP: 16 bits altos = indice de SS, 16 bits bajos = tamano de stack (tope inicial fuera del stack).
  * - IP: 16 bits altos = indice de CS, 16 bits bajos = offset de entry point.
  */
-void inicializarRegistrosV2(Registros r, const uint32_t t[], const ConfiguracionMV *cfg);
+void inicializarRegistrosV2(Registros registros, const uint32_t tablaSegmentos[], const ConfiguracionMV *cfg);
 
 /**
  * Muestra por consola los punteros cargados en los registros de segmentos
  */
-void mostrarRegistros(const Registros r);
+void mostrarRegistros(const Registros registros);
 
 #endif // REGISTROS_H

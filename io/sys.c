@@ -7,122 +7,122 @@
 #include "traductor.h"
 #include "errores.h"
 
-int prepararSys(ParamSys *p, tabla_segmentos t, Registros r) {
-    uint32_t ecx = r[REGECX];
+int prepararSys(ParamSys *paramSys, tabla_segmentos tablaSegmentos, Registros registros) {
+    uint32_t ecx = registros[REGECX];
 
-    p->dirL     = r[REGEDX];
-    p->modo     = r[REGEAX];
-    p->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
-    p->cant     = ecx & 0xFFFF;     // 2 bytes menos significativos: cantidad de elementos
+    paramSys->dirL     = registros[REGEDX];
+    paramSys->modo     = registros[REGEAX];
+    paramSys->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
+    paramSys->cant     = ecx & 0xFFFF;     // 2 bytes menos significativos: cantidad de elementos
 
-    if (p->tamBytes < 1 || p->tamBytes > 4) {
+    if (paramSys->tamBytes < 1 || paramSys->tamBytes > 4) {
         reportarError(ERROR_TAMANIO_SYS);
     }
 
-    if (p->cant == 0) {
+    if (paramSys->cant == 0) {
         return 0; // Nada que transferir
     }
 
     // Valida que todo el bloque quepa en el segmento correspondiente
-    p->dirF = traducir(p->dirL, t, r, p->tamBytes * p->cant, 1);
+    paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, paramSys->tamBytes * paramSys->cant, 1);
     return 1;
 }
 
-void sysWrite(ParamSys *p, Memoria m, tabla_segmentos t, Registros r) {
-    for (uint32_t i = 0; i < p->cant; i++) {
-        dirLogica l = p->dirL + i * p->tamBytes;
-        dirFisica f    = traducir(l, t, r, p->tamBytes, 1);
-        uint32_t valor = leerDeMemoria(m, f, p->tamBytes, r);
+void sysWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+    for (uint32_t i = 0; i < paramSys->cant; i++) {
+        dirLogica dirLog = paramSys->dirL + i * paramSys->tamBytes;
+        dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, paramSys->tamBytes, 1);
+        uint32_t valor   = leerDeMemoria(memoria, dirFis, paramSys->tamBytes, registros);
 
-        printf("[%04X]:", (unsigned)f);
-        if (p->modo & MODO_BIN)
+        printf("[%04X]:", (unsigned)dirFis);
+        if (paramSys->modo & MODO_BIN)
             imprimirBinario(valor);
-        if (p->modo & MODO_HEX)
+        if (paramSys->modo & MODO_HEX)
             imprimirHexa(valor);
-        if (p->modo & MODO_OCT)
+        if (paramSys->modo & MODO_OCT)
             imprimirOctal(valor);
-        if (p->modo & MODO_CHAR)
-            imprimirChar(valor, p->tamBytes);
-        if (p->modo & MODO_DEC)
-            imprimirDecimal(valor, p->tamBytes);
+        if (paramSys->modo & MODO_CHAR)
+            imprimirChar(valor, paramSys->tamBytes);
+        if (paramSys->modo & MODO_DEC)
+            imprimirDecimal(valor, paramSys->tamBytes);
         printf("\n");
     }
 }
 
-void sysRead(ParamSys *p, Memoria m, tabla_segmentos t, Registros r) {
-    uint32_t mascara = mascaraBytes(p->tamBytes);
+void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+    uint32_t mascara = mascaraBytes(paramSys->tamBytes);
 
-    if (!modoLecturaValido(p->modo)) {
+    if (!modoLecturaValido(paramSys->modo)) {
         reportarError(ERROR_MODO_SYS);
     }
 
-    for (uint32_t i = 0; i < p->cant; i++) {
-        dirLogica l = p->dirL + i * p->tamBytes;
+    for (uint32_t i = 0; i < paramSys->cant; i++) {
+        dirLogica dirLog = paramSys->dirL + i * paramSys->tamBytes;
         uint32_t valor = 0;
         int ok;
 
-        dirFisica f = traducir(l, t, r, p->tamBytes, 1);
+        dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, paramSys->tamBytes, 1);
 
         do {
-            printf("[%04X]: ", (unsigned)f);
+            printf("[%04X]: ", (unsigned)dirFis);
             fflush(stdout);
-            ok = leerValor(p->modo, &valor);
+            ok = leerValor(paramSys->modo, &valor);
         } while (!ok);
 
-        escribirEnMemoria(m, f, valor & mascara, p->tamBytes, r);
+        escribirEnMemoria(memoria, dirFis, valor & mascara, paramSys->tamBytes, registros);
     }
 }
 
-void llamadaSistema(uint32_t tipoLlamada, Memoria m, tabla_segmentos t, Registros r) {
-    ParamSys p;
+void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+    ParamSys paramSys;
 
     if (tipoLlamada != SYS_READ && tipoLlamada != SYS_WRITE) {
         reportarError(ERROR_SYS_INVALIDA);
     }
 
-    if (!prepararSys(&p, t, r)) {
+    if (!prepararSys(&paramSys, tablaSegmentos, registros)) {
         return;
     }
 
     if (tipoLlamada == SYS_WRITE) {
-        sysWrite(&p, m, t, r);
+        sysWrite(&paramSys, memoria, tablaSegmentos, registros);
     } else {
         if(tipoLlamada == SYS_WRITE)
-            sysRead(&p, m, t, r);
+            sysRead(&paramSys, memoria, tablaSegmentos, registros);
     }
 }
 
 /// Helpers de Lectura y Parseo
 
-int leerLinea(char *buf, int n) {
-    if (!fgets(buf, n, stdin)) {
+int leerLinea(char *buf, int tamanioMax) {
+    if (!fgets(buf, tamanioMax, stdin)) {
         return 0; // EOF
     }
     if (!strchr(buf, '\n')) {
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF);
+        int caracter;
+        while ((caracter = getchar()) != '\n' && caracter != EOF);
     }
     return 1;
 }
 
-int parsearEntero(const char *s, int base, int conSigno, uint32_t *out) {
+int parsearEntero(const char *cadena, int base, int conSigno, uint32_t *out) {
     char *fin;
 
-    while (isspace((unsigned char)*s)) s++;
-    if (*s == '\0')
+    while (isspace((unsigned char)*cadena)) cadena++;
+    if (*cadena == '\0')
         return 0;
-    if (!conSigno && *s == '-')
+    if (!conSigno && *cadena == '-')
         return 0;
 
     errno = 0;
     if (conSigno) {
-        long long v = strtoll(s, &fin, base);
-        if (errno || fin == s || v < INT32_MIN || v > (long long)UINT32_MAX) return 0;
-        *out = (uint32_t)v;
+        long long valorLeido = strtoll(cadena, &fin, base);
+        if (errno || fin == cadena || valorLeido < INT32_MIN || valorLeido > (long long)UINT32_MAX) return 0;
+        *out = (uint32_t)valorLeido;
     } else {
-        unsigned long long v = strtoull(s, &fin, base);
-        if (errno || fin == s || v > UINT32_MAX) return 0;
-        *out = (uint32_t)v;
+        unsigned long long valorLeido = strtoull(cadena, &fin, base);
+        if (errno || fin == cadena || valorLeido > UINT32_MAX) return 0;
+        *out = (uint32_t)valorLeido;
     }
 
     while (isspace((unsigned char)*fin))
@@ -130,25 +130,25 @@ int parsearEntero(const char *s, int base, int conSigno, uint32_t *out) {
     return *fin == '\0';
 }
 
-int leerDecimal(const char *s, uint32_t *out) {
-    return parsearEntero(s, 10, 1, out);
+int leerDecimal(const char *cadena, uint32_t *out) {
+    return parsearEntero(cadena, 10, 1, out);
 }
 
-int leerOctal  (const char *s, uint32_t *out) {
-    return parsearEntero(s,  8, 0, out);
+int leerOctal  (const char *cadena, uint32_t *out) {
+    return parsearEntero(cadena,  8, 0, out);
 }
 
-int leerHexa   (const char *s, uint32_t *out) {
-    return parsearEntero(s, 16, 0, out);
+int leerHexa   (const char *cadena, uint32_t *out) {
+    return parsearEntero(cadena, 16, 0, out);
 }
 
-int leerBinario(const char *s, uint32_t *out) {
-    return parsearEntero(s,  2, 0, out);
+int leerBinario(const char *cadena, uint32_t *out) {
+    return parsearEntero(cadena,  2, 0, out);
 }
 
-int leerChar(const char *s, uint32_t *out) {
-    if (s[0] == '\0' || s[0] == '\n') return 0;
-    *out = (unsigned char)s[0];
+int leerChar(const char *cadena, uint32_t *out) {
+    if (cadena[0] == '\0' || cadena[0] == '\n') return 0;
+    *out = (unsigned char)cadena[0];
     return 1;
 }
 
@@ -177,45 +177,45 @@ uint32_t mascaraBytes(uint32_t tamBytes) {
     return (tamBytes >= 4) ? 0xFFFFFFFFu : ((1u << (tamBytes * 8)) - 1u);
 }
 
-int32_t extenderSigno(uint32_t v, uint32_t bits) {
-    if (bits >= 32) return (int32_t)v;
+int32_t extenderSigno(uint32_t valor, uint32_t bits) {
+    if (bits >= 32) return (int32_t)valor;
     uint32_t signo = 1u << (bits - 1);
-    return (int32_t)((v ^ signo) - signo);
+    return (int32_t)((valor ^ signo) - signo);
 }
 
 /// Helpers de Formateo e Impresion
 
-void imprimirBinario(uint32_t v) {
+void imprimirBinario(uint32_t valor) {
     printf(" 0b");
-    if (v == 0) {
+    if (valor == 0) {
         printf("0");
         return;
     }
     int bitMasSignificativo = 31;
-    while (bitMasSignificativo >= 0 && !((v >> bitMasSignificativo) & 1u)) {
+    while (bitMasSignificativo >= 0 && !((valor >> bitMasSignificativo) & 1u)) {
         bitMasSignificativo--;
     }
     for (int j = bitMasSignificativo; j >= 0; j--) {
-        printf("%u", (v >> j) & 1u);
+        printf("%u", (valor >> j) & 1u);
     }
 }
 
-void imprimirHexa(uint32_t v) {
-    printf(" 0x%X", v);
+void imprimirHexa(uint32_t valor) {
+    printf(" 0x%X", valor);
 }
 
-void imprimirOctal(uint32_t v) {
-    printf(" 0o%o", v);
+void imprimirOctal(uint32_t valor) {
+    printf(" 0o%o", valor);
 }
 
-void imprimirChar(uint32_t v, uint32_t tamBytes) {
+void imprimirChar(uint32_t valor, uint32_t tamBytes) {
     printf(" ");
     for (int j = (int)tamBytes - 1; j >= 0; j--) {
-        unsigned char c = (v >> (j * 8)) & 0xFF;
-        putchar((c >= 32 && c <= 126) ? (char)c : '.');
+        unsigned char caracter = (valor >> (j * 8)) & 0xFF;
+        putchar((caracter >= 32 && caracter <= 126) ? (char)caracter : '.');
     }
 }
 
-void imprimirDecimal(uint32_t v, uint32_t tamBytes) {
-    printf(" %d", extenderSigno(v, tamBytes * 8));
+void imprimirDecimal(uint32_t valor, uint32_t tamBytes) {
+    printf(" %d", extenderSigno(valor, tamBytes * 8));
 }
