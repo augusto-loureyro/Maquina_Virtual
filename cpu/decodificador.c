@@ -43,42 +43,42 @@ int tamanioOperando(int tipo) {
 }
 
 Operando leerOperando(int tipo, uint8_t *bytes) {
-    Operando o;
-    o.tipo = tipo;
-    o.codigoRegistro = 0;
-    o.sector = SECTOR_COMPLETO;
-    o.tamanoMemoria = 4;
-    o.modifMemoria = MODIF_MEM_DEFAULT;
-    o.desplazamiento = 0;
-    o.inmediato = 0;
+    Operando operando;
+    operando.tipo = tipo;
+    operando.codigoRegistro = 0;
+    operando.sector = SECTOR_COMPLETO;
+    operando.tamanoMemoria = 4;
+    operando.modifMemoria = MODIF_MEM_DEFAULT;
+    operando.desplazamiento = 0;
+    operando.inmediato = 0;
 
     switch (tipo) {
         case TIPO_REGISTRO:
             /// 1 byte: 1 bit reservado (bit 7) + 2 bits sector (bits 6-5) + 5 bits codigo de registro (bits 4-0)
-            o.sector = (bytes[0] >> 5) & 0x03;
-            o.codigoRegistro = bytes[0] & 0x1F;
+            operando.sector = (bytes[0] >> 5) & 0x03;
+            operando.codigoRegistro = bytes[0] & 0x1F;
             break;
 
         case TIPO_INMEDIATO:
             /// 2 bytes: entero de 16 bits con signo (big-endian)
-            o.inmediato = (int16_t)((bytes[0] << 8) | bytes[1]);
+            operando.inmediato = (int16_t)((bytes[0] << 8) | bytes[1]);
             break;
 
         case TIPO_MEMORIA: {
             /// 3 bytes: 2 bytes offset (big-endian) + 1 byte (3 bits cant bytes + 5 bits registro)
-            o.desplazamiento = (int16_t)((bytes[0] << 8) | bytes[1]);
-            o.codigoRegistro = bytes[2] & 0x1F;
-            o.modifMemoria = (bytes[2] >> 5) & 0x07;
-            switch (o.modifMemoria) {
+            operando.desplazamiento = (int16_t)((bytes[0] << 8) | bytes[1]);
+            operando.codigoRegistro = bytes[2] & 0x1F;
+            operando.modifMemoria = (bytes[2] >> 5) & 0x07;
+            switch (operando.modifMemoria) {
                 case MODIF_MEM_BYTE:    // 001: 1 byte (b[])
-                    o.tamanoMemoria = 1;
+                    operando.tamanoMemoria = 1;
                     break;
                 case MODIF_MEM_WORD:    // 010: 2 bytes (w[])
-                    o.tamanoMemoria = 2;
+                    operando.tamanoMemoria = 2;
                     break;
                 case MODIF_MEM_LONG:    // 100: 4 bytes (l[])
                 case MODIF_MEM_DEFAULT: // 000: 4 bytes (compatibilidad MV1 y [])
-                    o.tamanoMemoria = 4;
+                    operando.tamanoMemoria = 4;
                     break;
                 default:
                     reportarError(ERROR_INSTRUCCION_INVALIDA);
@@ -92,13 +92,13 @@ Operando leerOperando(int tipo, uint8_t *bytes) {
             break;
     }
 
-    return o;
+    return operando;
 }
 
-int obtenerTamanoOperando(Operando o) {
-    switch (o.tipo) {
+int obtenerTamanoOperando(Operando operando) {
+    switch (operando.tipo) {
         case TIPO_REGISTRO:
-            switch (o.sector) {
+            switch (operando.sector) {
                 case SECTOR_BYTE_BAJO:
                 case SECTOR_BYTE_ALTO:
                     return 1;
@@ -109,7 +109,7 @@ int obtenerTamanoOperando(Operando o) {
                     return 4;
             }
         case TIPO_MEMORIA:
-            return o.tamanoMemoria;
+            return operando.tamanoMemoria;
         case TIPO_INMEDIATO:
             return 2;
         default:

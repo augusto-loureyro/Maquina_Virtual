@@ -4,14 +4,14 @@
 #include "memoria.h"
 #include "errores.h"
 
-void inicializarTablaSegmentos(tabla_segmentos t) {
+void inicializarTablaSegmentos(tabla_segmentos tablaSegmentos) {
     for (int i = 0; i < CANT_SEG; i++) {
-        t[i] = 0xFFFFFFFF; // Entradas no utilizadas inicializadas en -1
+        tablaSegmentos[i] = 0xFFFFFFFF; // Entradas no utilizadas inicializadas en -1
     }
 }
 
-void cargarTablaSegmentosV1(tabla_segmentos t, uint16_t code_size) {
-    inicializarTablaSegmentos(t);
+void cargarTablaSegmentosV1(tabla_segmentos tablaSegmentos, uint16_t code_size) {
+    inicializarTablaSegmentos(tablaSegmentos);
 
     /// Segmento 0: Codigo (comienza en 0, tamano = code_size)
     uint16_t baseCode = 0;
@@ -21,11 +21,11 @@ void cargarTablaSegmentosV1(tabla_segmentos t, uint16_t code_size) {
     uint16_t baseData = code_size;
     uint16_t tamanioData = TAMANIO_MEMORIA - code_size;
 
-    t[CODE] = ((uint32_t)baseCode << 16) | tamanioCode;
-    t[DATA] = ((uint32_t)baseData << 16) | tamanioData;
+    tablaSegmentos[CODE] = ((uint32_t)baseCode << 16) | tamanioCode;
+    tablaSegmentos[DATA] = ((uint32_t)baseData << 16) | tamanioData;
 }
 
-void cargarTablaSegmentosV2(tabla_segmentos t, const ConfiguracionMV *cfg) {
+void cargarTablaSegmentosV2(tabla_segmentos tablaSegmentos, const ConfiguracionMV *cfg) {
     uint16_t param_size = calcularTamanioParamSegment(cfg);
     uint16_t const_size = cfg->header.const_size;
     uint16_t code_size  = cfg->header.code_size;
@@ -45,7 +45,7 @@ void cargarTablaSegmentosV2(tabla_segmentos t, const ConfiguracionMV *cfg) {
     if (totalProceso > totalRAM) {
         reportarError(ERROR_MEMORIA_INSUFICIENTE);
     }else{
-        inicializarTablaSegmentos(t);
+        inicializarTablaSegmentos(tablaSegmentos);
 
         /// Ubicacion fisica contigua de segmentos en memoria:
         /// Param -> Const -> Code -> Data -> Extra -> Stack
@@ -55,55 +55,55 @@ void cargarTablaSegmentosV2(tabla_segmentos t, const ConfiguracionMV *cfg) {
 
         /// 1. Param Segment
         if (param_size > 0) {
-            t[idx++] = (baseActual << 16) | param_size;
+            tablaSegmentos[idx++] = (baseActual << 16) | param_size;
             baseActual += param_size;
         }
 
         /// 2. Const Segment
         if (const_size > 0) {
-            t[idx++] = (baseActual << 16) | const_size;
+            tablaSegmentos[idx++] = (baseActual << 16) | const_size;
             baseActual += const_size;
         }
 
         /// 3. Code Segment
         if (code_size > 0) {
-            t[idx++] = (baseActual << 16) | code_size;
+            tablaSegmentos[idx++] = (baseActual << 16) | code_size;
             baseActual += code_size;
         }
 
         /// 4. Data Segment
         if (data_size > 0) {
-            t[idx++] = (baseActual << 16) | data_size;
+            tablaSegmentos[idx++] = (baseActual << 16) | data_size;
             baseActual += data_size;
         }
 
         /// 5. Extra Segment
         if (extra_size > 0) {
-            t[idx++] = (baseActual << 16) | extra_size;
+            tablaSegmentos[idx++] = (baseActual << 16) | extra_size;
             baseActual += extra_size;
         }
 
         /// 6. Stack Segment
         if (stack_size > 0) {
-            t[idx++] = (baseActual << 16) | stack_size;
+            tablaSegmentos[idx++] = (baseActual << 16) | stack_size;
             baseActual += stack_size;
         }
     }
 }
 
-uint16_t obtenerBaseSegmento(const tabla_segmentos t, int segmento) {
-    return (uint16_t)(t[segmento] >> 16);
+uint16_t obtenerBaseSegmento(const tabla_segmentos tablaSegmentos, int segmento) {
+    return (uint16_t)(tablaSegmentos[segmento] >> 16);
 }
 
-uint16_t obtenerTamanioSegmento(const tabla_segmentos t, int segmento) {
-    return (uint16_t)(t[segmento] & 0xFFFF);
+uint16_t obtenerTamanioSegmento(const tabla_segmentos tablaSegmentos, int segmento) {
+    return (uint16_t)(tablaSegmentos[segmento] & 0xFFFF);
 }
 
-int esSegmentoValido(const tabla_segmentos t, int segmento) {
+int esSegmentoValido(const tabla_segmentos tablaSegmentos, int segmento) {
     if (segmento < 0 || segmento >= CANT_SEG) {
         return 0;
     }
-    return t[segmento] != 0xFFFFFFFF;
+    return tablaSegmentos[segmento] != 0xFFFFFFFF;
 }
 
 uint16_t calcularTamanioParamSegment(const ConfiguracionMV *cfg) {
@@ -121,13 +121,13 @@ uint16_t calcularTamanioParamSegment(const ConfiguracionMV *cfg) {
     return (uint16_t)tam;
 }
 
-void mostrarTablaSegmentos(const tabla_segmentos t) {
+void mostrarTablaSegmentos(const tabla_segmentos tablaSegmentos) {
     printf("Tabla de Descriptores de Segmentos (8 entradas):\n");
     for (int i = 0; i < CANT_SEG; i++) {
-        if (t[i] != 0xFFFFFFFF) {
+        if (tablaSegmentos[i] != 0xFFFFFFFF) {
             printf("  Entrada %d: Base = 0x%04X (%5u) | Limite = 0x%04X (%5u bytes)\n",
-                   i, obtenerBaseSegmento(t, i), obtenerBaseSegmento(t, i),
-                   obtenerTamanioSegmento(t, i), obtenerTamanioSegmento(t, i));
+                   i, obtenerBaseSegmento(tablaSegmentos, i), obtenerBaseSegmento(tablaSegmentos, i),
+                   obtenerTamanioSegmento(tablaSegmentos, i), obtenerTamanioSegmento(tablaSegmentos, i));
         } else {
             printf("  Entrada %d: 0xFFFFFFFF (vacia)\n", i);
         }

@@ -9,9 +9,9 @@
 
 int main(int argc, char *argv[]) {
     ConfiguracionMV config;
-    tabla_segmentos t;
-    Memoria m = NULL;
-    Registros r;
+    tabla_segmentos tablaSegmentos;
+    Memoria memoria = NULL;
+    Registros registros;
 
     /// 1. Inicializar y parsear argumentos de linea de comandos
     inicializarConfiguracion(&config);
@@ -28,27 +28,27 @@ int main(int argc, char *argv[]) {
             /// Mostrar metadatos del encabezado y configuracion
             mostrarMetadatos(&config);
 
-            /// Construir tabla de descriptores de segmentos 
-            cargarTablaSegmentosV2(t, &config);
+            /// Construir tabla de segmentos 
+            cargarTablaSegmentosV2(tablaSegmentos, &config);
 
             /// Reservar memoria RAM de tamano variable segun m=M
-            reservarMemoria(&m, tamanioRAM);
+            reservarMemoria(&memoria, tamanioRAM);
 
             /// Inicializar registros V2 (CS, DS, ES, SS, KS, PS, SP, IP)
-            inicializarRegistrosV2(r, t, &config);
+            inicializarRegistrosV2(registros, tablaSegmentos, &config);
 
             /// Cargar en memoria el Param Segment si existe (-p)
-            cargarParamSegment(&config, m, t, r);
+            cargarParamSegment(&config, memoria, tablaSegmentos, registros);
 
             /// Cargar el Code Segment y el Const Segment
-            cargarMemoriaV2(config.archVMX, m, tamanioRAM, t, r, &config.header);
+            cargarMemoriaV2(config.archVMX, memoria, tamanioRAM, tablaSegmentos, registros, &config.header);
 
             /// Mostrar informacion de la tabla y los registros de segmentos
-            mostrarTablaSegmentos(t);
-            mostrarRegistros(r);
+            mostrarTablaSegmentos(tablaSegmentos);
+            mostrarRegistros(registros);
 
             /// Liberar recursos antes de salir
-            liberarMemoria(&m);
+            liberarMemoria(&memoria);
             return 0;
         }
     } else {
@@ -58,20 +58,20 @@ int main(int argc, char *argv[]) {
     }
 
     /// 3. Flujo MV1 (version 1) para asegurar retrocompatibilidad y no regresion:
-    cargarTablaSegmentosV1(t, config.header.code_size);
+    cargarTablaSegmentosV1(tablaSegmentos, config.header.code_size);
 
     /// 4. Reservar memoria RAM y cargar el segmento de codigo
-    reservarMemoria(&m, TAMANIO_MEMORIA);
-    cargarMemoriaV1(config.archVMX, m, config.header.code_size);
+    reservarMemoria(&memoria, TAMANIO_MEMORIA);
+    cargarMemoriaV1(config.archVMX, memoria, config.header.code_size);
 
     /// 5. Inicializar el banco de 32 registros 
-    inicializarRegistrosV1(r);
+    inicializarRegistrosV1(registros);
 
     /// 6. Ejecutar el ciclo de instruccion 
-    ejecutarPrograma(t, m, r, config.flagD);
+    ejecutarPrograma(tablaSegmentos, memoria, registros, config.flagD);
 
     /// 7. Liberar recursos antes de salir
-    liberarMemoria(&m);
+    liberarMemoria(&memoria);
 
     return 0;
 }

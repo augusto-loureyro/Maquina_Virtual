@@ -17,7 +17,7 @@
  */
 typedef uint32_t tabla_segmentos[CANT_SEG];
 
-void inicializarTablaSegmentos(tabla_segmentos t);
+void inicializarTablaSegmentos(tabla_segmentos tablaSegmentos);
 
 /**
  * Carga la tabla de descriptores para MV1 (Version 1):
@@ -25,7 +25,7 @@ void inicializarTablaSegmentos(tabla_segmentos t);
  * - Segmento 1: Datos (base code_size, tamano TAMANIO_MEMORIA - code_size)
  * - Entradas 2..7 en 0xFFFFFFFF
  */
-void cargarTablaSegmentosV1(tabla_segmentos t, uint16_t code_size);
+void cargarTablaSegmentosV1(tabla_segmentos tablaSegmentos, uint16_t code_size);
 
 /**
  * Carga la tabla de descriptores para MV2 (Version 2):
@@ -34,11 +34,11 @@ void cargarTablaSegmentosV1(tabla_segmentos t, uint16_t code_size);
  * - Solo crea entradas para segmentos con tamano mayor a cero (omite segmentos en cero).
  * - Entradas no utilizadas en 0xFFFFFFFF.
  */
-void cargarTablaSegmentosV2(tabla_segmentos t, const ConfiguracionMV *cfg);
+void cargarTablaSegmentosV2(tabla_segmentos tablaSegmentos, const ConfiguracionMV *cfg);
 
-uint16_t obtenerBaseSegmento(const tabla_segmentos t, int segmento);
-uint16_t obtenerTamanioSegmento(const tabla_segmentos t, int segmento);
-int esSegmentoValido(const tabla_segmentos t, int segmento);
+uint16_t obtenerBaseSegmento(const tabla_segmentos tablaSegmentos, int segmento);
+uint16_t obtenerTamanioSegmento(const tabla_segmentos tablaSegmentos, int segmento);
+int esSegmentoValido(const tabla_segmentos tablaSegmentos, int segmento);
 
 /**
  * Calcula el tamano del Param Segment a partir del archivo .vmx y parametros de -p.
@@ -49,6 +49,6 @@ uint16_t calcularTamanioParamSegment(const ConfiguracionMV *cfg);
 /**
  * Muestra por consola las entradas de la tabla de descriptores de segmentos.
  */
-void mostrarTablaSegmentos(const tabla_segmentos t);
+void mostrarTablaSegmentos(const tabla_segmentos tablaSegmentos);
 
 #endif // TABLASEGMENTOS_H

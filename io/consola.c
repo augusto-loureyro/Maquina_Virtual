@@ -22,9 +22,9 @@ static int tieneExtension(const char *nombre, const char *ext) {
     if (len <= extLen) {
         return 0;
     } else {
-        const char *p = nombre + len - extLen;
+        const char *sufijo = nombre + len - extLen;
         for (size_t i = 0; i < extLen; i++) {
-            if (tolower((unsigned char)p[i]) != tolower((unsigned char)ext[i])) {
+            if (tolower((unsigned char)sufijo[i]) != tolower((unsigned char)ext[i])) {
                 return 0;
             }
         }

@@ -44,6 +44,9 @@
 		<Unit filename="cpu/decodificador.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="cpu/pila.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="cpu/registros.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -56,6 +59,7 @@
 		<Unit filename="include/loader.h" />
 		<Unit filename="include/memoria.h" />
 		<Unit filename="include/opcode.h" />
+		<Unit filename="include/pila.h" />
 		<Unit filename="include/registros.h" />
 		<Unit filename="include/sys.h" />
 		<Unit filename="include/tablaSegmentos.h" />

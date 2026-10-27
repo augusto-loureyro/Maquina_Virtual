@@ -1,5 +1,8 @@
 #include "errores.h"
 
+/**
+ * Imprime el tipo de error y finaliza la ejecucion.
+ */
 void reportarError(TipoError tipo) {
     const char *mensaje;
 
@@ -39,6 +42,12 @@ void reportarError(TipoError tipo) {
             break;
         case ERROR_MEMORIA_INSUFICIENTE:
             mensaje = "Memoria insuficiente";
+            break;
+        case ERROR_STACK_OVERFLOW:
+            mensaje = "stack overflow, memoria insuficiente en la pila";
+            break;
+        case ERROR_STACK_UNDERFLOW:
+            mensaje = "stack underflow, pila vacia o inaccesible";
             break;
         default:
             mensaje = "Error desconocido";
