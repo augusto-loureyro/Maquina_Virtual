@@ -11,5 +11,6 @@ obj/
 *.layout
 *.swp
 *.bak
+*.cbp
 err.txt
 out.txt
