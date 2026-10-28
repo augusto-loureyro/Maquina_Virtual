@@ -35,4 +35,5 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla
 uint32_t leerDeMemoria(Memoria memoria, uint32_t dirFisica, int cantidadBytes, Registros registros);
 void escribirEnMemoria(Memoria memoria, uint32_t dirFisica, uint32_t valor, int cantidadBytes, Registros registros);
 
+void cargarMemoriaVMI(const char *nombreArchivo, Memoria memoria, uint32_t tamanioRAM);
 #endif // MEMORIA_H

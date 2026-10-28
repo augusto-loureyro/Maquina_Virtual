@@ -126,3 +126,10 @@ void mostrarRegistros(const Registros registros) {
     if (registros[REGIP] != 0xFFFFFFFF) printf("0x%08X (Entrada %u, Entry Offset 0x%04X)\n", registros[REGIP], registros[REGIP] >> 16, registros[REGIP] & 0xFFFF);
     else printf("0xFFFFFFFF (-1 / no asignado)\n");
 }
+
+//venían en big-endian?? asumo que sí
+void cargarRegistrosVMI(const uint8_t *bytes, Registros registros) {
+    for (int i = 0; i < CANT_REGISTROS; i++) {
+        registros[i] = bytesAUint32BE(&bytes[i*4]);
+    }
+}

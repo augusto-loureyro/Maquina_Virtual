@@ -170,3 +170,26 @@ void escribirEnMemoria(Memoria memoria, uint32_t dirFisica, uint32_t valor, int 
         memoria[dirFisica + k] = (valorAlmacenado >> (8 * (cantidadBytes - 1 - k))) & 0xFF; // Big-endian
     }
 }
+#define OFFSET_MEMORIA_VMI 168 //TAMANIO_HEADER_VMI + BYTES_REGISTROS_VMI + BYTES_TABLA_VMI  
+
+void cargarMemoriaVMI(const char *nombreArchivo, Memoria memoria, uint32_t tamanioRAM) {
+    FILE *archVMI = fopen(nombreArchivo, "rb");
+
+    if (archVMI == NULL) {
+        reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
+    }
+
+    // Saltar header, registros y tabla de segmentos
+    if (fseek(archVMI, OFFSET_MEMORIA_VMI, SEEK_SET) != 0) {
+        fclose(archVMI);
+        reportarError(ERROR_ENCABEZADO_INVALIDO);
+    }
+
+    size_t leidos = fread(memoria, 1, tamanioRAM, archVMI);
+    int sobranBytes = (fgetc(archVMI) != EOF);   // la memoria es lo ultimo del archivo
+    fclose(archVMI);
+
+    if (leidos != tamanioRAM || sobranBytes) {
+        reportarError(ERROR_ENCABEZADO_INVALIDO);
+    }
+}

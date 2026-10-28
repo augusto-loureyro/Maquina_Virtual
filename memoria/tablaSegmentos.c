@@ -134,3 +134,10 @@ void mostrarTablaSegmentos(const tabla_segmentos tablaSegmentos) {
     }
 }
 
+//venían en big-endian?? asumo que sí
+void cargarTablaSegmentosVMI(const uint8_t *bytes, tabla_segmentos tabla) {
+    for (int i = 0; i < CANT_SEG; i++) {
+        tabla[i] = bytesAUint32BE(&bytes[i * 4]);
+    }
+}
+

@@ -19,6 +19,7 @@ typedef struct {
     int cantParams;          /** Cantidad de parametros del proceso pasados tras -p */
     char **params;           /** Puntero al arreglo de cadenas de parametros */
     HeaderVMX header;        /** Metadatos del encabezado VMX (leidos por el loader) */
+    HeaderVMI headerVMI;
 } ConfiguracionMV;
 
 /**

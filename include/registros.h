@@ -74,4 +74,6 @@ void inicializarRegistrosV2(Registros registros, const uint32_t tablaSegmentos[]
  */
 void mostrarRegistros(const Registros registros);
 
+void cargarRegistrosVMI(const uint8_t *bytes, Registros registros);
+
 #endif // REGISTROS_H
