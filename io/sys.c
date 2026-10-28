@@ -7,21 +7,30 @@
 #include "traductor.h"
 #include "errores.h"
 
-int prepararSys(ParamSys *paramSys, tabla_segmentos tablaSegmentos, Registros registros) {
+int prepararSys(ParamSys *paramSys, uint32_t tipoLlamada, tabla_segmentos tablaSegmentos, Registros registros) {
     uint32_t ecx = registros[REGECX];
 
-    paramSys->dirL     = registros[REGEDX];
-    paramSys->modo     = registros[REGEAX];
-    paramSys->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
-    paramSys->cant     = ecx & 0xFFFF;     // 2 bytes menos significativos: cantidad de elementos
+    paramSys->dirL = registros[REGEDX];
+    paramSys->cant = 0;
 
-    if (paramSys->tamBytes < 1 || paramSys->tamBytes > 4) {
-        reportarError(ERROR_TAMANIO_SYS);
+    switch (tipoLlamada) {
+        case SYS_READ:
+        case SYS_WRITE:
+            paramSys->modo     = registros[REGEAX];
+            paramSys->cant     = ecx & 0xFFFF;     // 2 bytes menos significativos: cantidad de elementos
+            paramSys->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
+            break;
+        case SYS_STRING_READ:
+            paramSys->cant = ecx;
+        case SYS_STRING_WRITE:
+            paramSys->tamBytes = 1;
     }
 
-    if (paramSys->cant == 0) {
+    if (paramSys->cant == 0)
         return 0; // Nada que transferir
-    }
+
+    if (paramSys->tamBytes < 1 || paramSys->tamBytes > 4)
+        reportarError(ERROR_TAMANIO_SYS);
 
     // Valida que todo el bloque quepa en el segmento correspondiente
     paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, paramSys->tamBytes * paramSys->cant, 1);
@@ -49,6 +58,10 @@ void sysWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmento
     }
 }
 
+void sysStringWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+
+}
+
 void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
     uint32_t mascara = mascaraBytes(paramSys->tamBytes);
 
@@ -73,22 +86,34 @@ void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos
     }
 }
 
+void sysStringRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+
+}
+
 void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
     ParamSys paramSys;
 
-    if (tipoLlamada != SYS_READ && tipoLlamada != SYS_WRITE) {
-        reportarError(ERROR_SYS_INVALIDA);
-    }
-
-    if (!prepararSys(&paramSys, tablaSegmentos, registros)) {
-        return;
-    }
-
-    if (tipoLlamada == SYS_WRITE) {
-        sysWrite(&paramSys, memoria, tablaSegmentos, registros);
-    } else {
-        if(tipoLlamada == SYS_WRITE)
-            sysRead(&paramSys, memoria, tablaSegmentos, registros);
+    switch(tipoLlamada) {
+        case SYS_READ:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysRead(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_WRITE:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysWrite(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_STRING_READ:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysStringRead(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_STRING_WRITE:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysStringWrite(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_CLEAR_SCREEN:
+            break;
+        case SYS_BREAKPOINT:
+            break;
     }
 }
 

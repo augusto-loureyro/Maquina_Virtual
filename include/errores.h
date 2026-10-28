@@ -14,7 +14,6 @@ typedef enum {
     ERROR_FALLO_DE_SEGMENTO,       /** Direccion logica invalida o acceso fuera de los limites del segmento */
     ERROR_TAMANIO_SYS,             /** Tamaño de celda en llamada al sistema fuera de rango [1..4] */
     ERROR_MODO_SYS,                /** Modo de lectura/escritura de syscall no soportado */
-    ERROR_SYS_INVALIDA,            /** Numero de syscall distinto de READ (1) o WRITE (2) */
     ERROR_ENTRADA_SYS,             /** Error o fin de archivo (EOF) al leer entrada en syscall READ */
     ERROR_MEMORIA_INSUFICIENTE,    /** Memoria principal insuficiente para alojar los segmentos o fallo al reservar RAM */
     ERROR_STACK_OVERFLOW,          /** Desborde de pila: PUSH o CALL sin espacio suficiente en la pila */

@@ -8,8 +8,12 @@
 #include "traductor.h"
 
 // Códigos de llamadas al sistema
-#define SYS_READ   0x1
-#define SYS_WRITE  0x2
+#define SYS_CLEAR_SCREEN 0x0
+#define SYS_READ         0x1
+#define SYS_WRITE        0x2
+#define SYS_STRING_READ  0x3
+#define SYS_STRING_WRITE 0x4
+#define SYS_BREAKPOINT   0xF
 
 // Modos de interpretación / salida (máscaras de bits)
 #define MODO_DEC   0x01
