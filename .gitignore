@@ -1,7 +1,7 @@
 # Build outputs
 bin/
 obj/
-*.exe
+vmx.exe
 *.o
 *.out
 
@@ -14,3 +14,7 @@ obj/
 *.cbp
 err.txt
 out.txt
+*.asm
+*.vmt
+*.vmx
+*.vmi

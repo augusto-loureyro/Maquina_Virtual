@@ -186,7 +186,7 @@ void saltarA(uint32_t desplazamiento, Registros registros) {
     registros[REGIP] = (registros[REGIP] & 0xFFFF0000) | (desplazamiento & 0xFFFF);
 }
 
-void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros) {
+void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg, int *breakpoint) {
     uint32_t valor;
 
     switch (instr.opcode) {
@@ -297,7 +297,7 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memo
 
         /// Instrucciones con 1 operando
         case OPCODE_SYS:
-            llamadaSistema(leerValorOperando(instr.operandoA, tablaSegmentos, memoria, registros), memoria, tablaSegmentos, registros);
+            llamadaSistema(leerValorOperando(instr.operandoA, tablaSegmentos, memoria, registros), memoria, tablaSegmentos, registros, cfg, breakpoint);
             break;
 
         case OPCODE_JMP:
@@ -393,13 +393,19 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memo
     }
 }
 
-void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, int flagD) {
+void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg) {
+    int breakpoint = 0;
+
     while (hayMasInstrucciones(tablaSegmentos, registros)) {
         Instruccion instr = buscarInstruccion(tablaSegmentos, memoria, registros);
-        if(flagD){
+
+        if(cfg->flagD)
             mostrarInstruccion(instr, memoria);
-        }
-        ejecutarInstruccion(instr, tablaSegmentos, memoria, registros);
+
+        ejecutarInstruccion(instr, tablaSegmentos, memoria, registros, cfg, &breakpoint);
+
+        if(breakpoint && (instr.opcode != OPCODE_SYS || leerValorOperando(instr.operandoA, tablaSegmentos, memoria, registros) != SYS_BREAKPOINT)) // evita rehacer el mismo breakpoint
+            llamadaSistema(SYS_BREAKPOINT, memoria, tablaSegmentos, registros, cfg, &breakpoint);
     }
 }
 

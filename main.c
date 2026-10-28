@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     inicializarRegistrosV1(registros);
 
     /// 6. Ejecutar el ciclo de instruccion 
-    ejecutarPrograma(tablaSegmentos, memoria, registros, config.flagD);
+    ejecutarPrograma(tablaSegmentos, memoria, registros, &config);
 
     /// 7. Liberar recursos antes de salir
     liberarMemoria(&memoria);
