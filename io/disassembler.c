@@ -5,6 +5,7 @@
 #include "memoria.h"
 #include "registros.h"
 #include "opcode.h"
+#include "traductor.h"
 
 static void formatearOperando(Operando operando, char *buf, size_t tam) {
     switch (operando.tipo) {
@@ -60,7 +61,9 @@ static void formatearOperando(Operando operando, char *buf, size_t tam) {
     }
 }
 
-void mostrarInstruccion(Instruccion instr, Memoria memoria) {
+void mostrarInstruccion(Instruccion instr, Memoria memoria, int esEntryPoint) {
+    ///
+    putchar(esEntryPoint ? '>' : ' ');
     /// 1. Direccion fisica de inicio: [0000]
     printf("[%04X] ", (unsigned)instr.dirInicio);
 
@@ -103,6 +106,66 @@ void mostrarInstruccion(Instruccion instr, Memoria memoria) {
     }
 
     printf("\n");
+}
+
+#define ANCHO_HEX 23     /// mismo ancho que usa mostrarInstruccion antes de la barra
+
+/** Muestra las constantes string del Const Segment: [dir] bytes | "texto" */
+void mostrarConstantes(Memoria memoria, tabla_segmentos tabla, Registros registros) {
+    /// KS == CS cubre el caso V1, donde KS puede quedar en 0 (segmento de codigo)
+    if (registros[REGKS] == 0xFFFFFFFF || registros[REGKS] == registros[REGCS])
+        return;
+
+    int seg = (int)(registros[REGKS] >> 16);
+    uint32_t dir = obtenerBaseSegmento(tabla, seg);
+    uint32_t fin = dir + obtenerTamanioSegmento(tabla, seg);
+
+    while (dir < fin) {
+        uint32_t i = dir;
+        while (i < fin && memoria[i] != 0)
+            i++;
+        uint32_t total = (i - dir) + (i < fin ? 1 : 0);      /// bytes de la cadena, con el '\0'
+
+        printf("[%04X] ", (unsigned)dir);
+        uint32_t mostrar = (total > 7) ? 6 : total;
+        int cols = 0;
+        for (uint32_t k = 0; k < mostrar; k++) {
+            printf("%02X ", memoria[dir + k]);
+            cols += 3;
+        }
+        if (total > 7) {
+            printf(".. ");
+            cols += 3;
+        }
+        while (cols++ < ANCHO_HEX)
+            putchar(' ');
+
+        printf("| \"");
+        for (uint32_t k = dir; k < i; k++)
+            putchar((memoria[k] >= 32 && memoria[k] <= 126) ? memoria[k] : '.');
+        printf("\"\n");
+
+        dir += total;
+    }
+}
+
+/** Desensamblado completo: constantes y luego todo el Code Segment, con '>' en el IP inicial */
+void mostrarDisassembly(Memoria memoria, tabla_segmentos tabla, Registros registros) {
+    Registros copia;
+    memcpy(copia, registros, CANT_REGISTROS * sizeof(uint32_t));   /// recorrer sin tocar el IP real
+
+    mostrarConstantes(memoria, tabla, registros);
+
+    if (registros[REGCS] == 0xFFFFFFFF)
+        return;
+
+    uint32_t dirEntrada = traducir(registros[REGIP], tabla, registros, 0, 0);
+    copia[REGIP] = registros[REGCS];                               /// empezar desde el comienzo del Code Segment
+
+    while (hayMasInstrucciones(tabla, copia)) {
+        Instruccion instr = buscarInstruccion(tabla, memoria, copia);
+        mostrarInstruccion(instr, memoria, instr.dirInicio == dirEntrada);
+    }
 }
 
 const char* mnemonico(int opcode) {

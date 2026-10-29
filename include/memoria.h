@@ -9,6 +9,8 @@
 #define TAMANIO_MEMORIA 16384 // 16 KiB de RAM
 #define TAMANIO_DATO    4     // Datos estándar de 32 bits (4 bytes)
 
+#define OFFSET_MEMORIA_VMI 168 //TAMANIO_HEADER_VMI + BYTES_REGISTROS_VMI + BYTES_TABLA_VMI  
+
 typedef uint8_t *Memoria;
 
 void reservarMemoria(Memoria *memoria, uint32_t tamanioM);

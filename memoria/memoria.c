@@ -179,7 +179,6 @@ void escribirEnMemoria(Memoria memoria, uint32_t dirFisica, uint32_t valor, int 
         memoria[dirFisica + k] = (valorAlmacenado >> (8 * (cantidadBytes - 1 - k))) & 0xFF; // Big-endian
     }
 }
-#define OFFSET_MEMORIA_VMI 168 //TAMANIO_HEADER_VMI + BYTES_REGISTROS_VMI + BYTES_TABLA_VMI  
 
 void cargarMemoriaVMI(const char *nombreArchivo, Memoria memoria, uint32_t tamanioRAM) {
     FILE *archVMI = fopen(nombreArchivo, "rb");

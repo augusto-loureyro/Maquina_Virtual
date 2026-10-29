@@ -67,5 +67,7 @@ void procesarHeaderVMI(const char *nombreArchivo, HeaderVMI *header);
 
 //utilidad
 uint32_t bytesAUint32BE(const uint8_t *b);
+/** Convierte un uint32_t a 4 bytes en big endian */
+void uint32ABytesBE(uint32_t valor, uint8_t *b);
 
 #endif // LOADER_H

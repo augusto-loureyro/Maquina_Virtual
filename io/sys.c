@@ -6,6 +6,7 @@
 #include "sys.h"
 #include "traductor.h"
 #include "errores.h"
+#include "cpu.h"
 
 int prepararSys(ParamSys *paramSys, uint32_t tipoLlamada, tabla_segmentos tablaSegmentos, Registros registros) {
     uint32_t ecx = registros[REGECX];
@@ -114,7 +115,7 @@ void sysStringRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSeg
 
     uint32_t i = 0;
 
-    while (i < limite && linea[i] != '\0') {
+    while (i < limite && linea[i] != '\0' && linea[i] != '\n') {
         escribirEnMemoria(memoria, dirFis, linea[i], 1, registros);
         i++;
         dirLog++;
@@ -125,38 +126,15 @@ void sysStringRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSeg
 }
 
 char sysBreakpoint(char *nombreArch, uint16_t mem_kib, Registros registros, tabla_segmentos tablaSegmentos, Memoria memoria) {
-    FILE *arch = fopen(nombreArch, "wb");
+    escribirImagenVMI(nombreArch, mem_kib, tablaSegmentos, registros, memoria);
 
-    if (arch == NULL)
-        reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
-
-    // Generar imagen
-    // Header
-    fwrite("VMI26", 1, 5, arch);
-    uint8_t version = 1;
-    fwrite(&version, 1, 1, arch);
-    fwrite(&mem_kib, 2, 1, arch);
-
-    // Registros
-    fwrite(registros, sizeof(registros[0]), CANT_REGISTROS, arch);
-    // Tabla segmentos
-    fwrite(tablaSegmentos, sizeof(tablaSegmentos[0]), CANT_SEG, arch);
-    // Memoria principal
-    fwrite(memoria, sizeof(memoria[0]), mem_kib * 1024, arch);
-
-    fclose(arch);
-
-    // Pausa y modo debug
-    int input, c;
-    do
-    {
-        input = getchar();
-    } while (input != 'g' && input != 'q' && input != '\n' && input != EOF);
-
-    if (input != '\n' && input != EOF)
-        while ((c = getchar()) != '\n' && c != EOF);
-
-    return input == EOF ? '.' : (char)input;
+    char linea[16];
+    while (1) {
+        if (!leerLinea(linea, sizeof(linea)))
+            return '.';
+        if (linea[0] == 'g' || linea[0] == 'q' || linea[0] == '\n')
+            return linea[0];
+    }
 }
 
 void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros, ConfiguracionMV *cfg, int *breakpoint) {
@@ -199,6 +177,7 @@ void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tabla
                     break;
             }
             break;
+        default: reportarError(ERROR_MODO_SYS);
     }
 }
 

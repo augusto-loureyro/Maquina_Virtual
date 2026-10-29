@@ -4,6 +4,7 @@
 #include "opcode.h"
 #include "sys.h"
 #include "errores.h"
+#include <string.h>
 
 uint32_t armarRegistroOperando(int tipo, uint8_t *bytes) {
     uint32_t valor = 0;
@@ -395,12 +396,11 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memo
 
 void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg) {
     int breakpoint = 0;
+    if (cfg->flagD)
+        mostrarDisassembly(memoria, tablaSegmentos, registros); //se muestra el disassembler antes de la ejecución, que es lo que hace el traductor (y sino no se muestra el >)
 
     while (hayMasInstrucciones(tablaSegmentos, registros)) {
         Instruccion instr = buscarInstruccion(tablaSegmentos, memoria, registros);
-
-        if(cfg->flagD)
-            mostrarInstruccion(instr, memoria);
 
         ejecutarInstruccion(instr, tablaSegmentos, memoria, registros, cfg, &breakpoint);
 
@@ -419,4 +419,35 @@ uint32_t LDL(uint32_t valorBase, uint16_t parteBaja) {
     valorBase &= 0xFFFF0000;               // Conserva la parte alta
     valorBase |= (uint32_t)parteBaja;      // Carga la nueva parte baja
     return valorBase;
+}
+
+/** Escribe la imagen: header (8) | registros (128) | tabla (32) | memoria (memKiB * 1024) para probar si es big.endian*/
+void escribirImagenVMI(const char *nombreArchivo, uint16_t memKiB, const tabla_segmentos tabla, const Registros registros, Memoria memoria) {
+    uint8_t meta[OFFSET_MEMORIA_VMI];       /// 8 + 128 + 32 = 168
+    uint32_t tamanioRAM = (uint32_t)memKiB * BYTES_POR_KIB;
+
+    memcpy(meta, IDENTIFICADOR_VMI, 5);
+    meta[5] = 1;                            /// version
+    meta[6] = (uint8_t)(memKiB >> 8);
+    meta[7] = (uint8_t)memKiB;
+
+    for (int i = 0; i < CANT_REGISTROS; i++) {
+        uint32ABytesBE(registros[i], &meta[TAMANIO_HEADER_VMI + i *4]);
+    }
+    for (int i = 0; i < CANT_SEG; i++) {
+        uint32ABytesBE(tabla[i], &meta[TAMANIO_HEADER_VMI + BYTES_REGISTROS_VMI + i *4]);
+    }
+
+    FILE *archVMI = fopen(nombreArchivo, "wb");
+    if (archVMI == NULL) {
+        reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
+    }
+
+    size_t escritosMeta = fwrite(meta, 1, sizeof(meta), archVMI);
+    size_t escritosMem  = fwrite(memoria, 1, tamanioRAM, archVMI);
+    fclose(archVMI);
+
+    if (escritosMeta != sizeof(meta) || escritosMem != tamanioRAM) {
+        reportarError(ERROR_ARCHIVO_NO_ENCONTRADO); 
+    }
 }

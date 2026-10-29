@@ -37,4 +37,5 @@ void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros
 uint32_t LDH(uint32_t valorBase, uint16_t parteAlta);
 uint32_t LDL(uint32_t valorBase, uint16_t parteBaja);
 dirLogica calcularDirLogica(uint32_t regValor, int16_t desplazamiento);
+void escribirImagenVMI(const char *nombreArchivo, uint16_t memKiB, const tabla_segmentos tabla, const Registros registros, Memoria memoria);
 #endif // CPU_H

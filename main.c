@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
 
         procesarHeaderVMI(config.archVMI, &config.headerVMI);
         uint32_t tamanioRAM = config.headerVMI.mem_kib * BYTES_POR_KIB;
+        config.mem_kib = config.headerVMI.mem_kib; //para no tener que diferenciar luego
 
         uint8_t bytesRegistros[BYTES_REGISTROS_VMI];
         uint8_t bytesTabla[BYTES_TABLA_VMI];
