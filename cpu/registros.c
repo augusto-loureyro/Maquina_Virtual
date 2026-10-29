@@ -125,9 +125,20 @@ void mostrarRegistros(const Registros registros) {
     printf("  IP (Instr Pointer): ");
     if (registros[REGIP] != 0xFFFFFFFF) printf("0x%08X (Entrada %u, Entry Offset 0x%04X)\n", registros[REGIP], registros[REGIP] >> 16, registros[REGIP] & 0xFFFF);
     else printf("0xFFFFFFFF (-1 / no asignado)\n");
+
+    printf("\n\n\notros registros (para pruebas): \n");
+    printf("EAX: 0x%08X \n",registros[REGEAX]);
+    printf("EBX: 0x%08X \n",registros[REGEBX]);
+    printf("ECX: 0x%08X \n",registros[REGECX]);
+    printf("EDX: 0x%08X \n",registros[REGEDX]);
+    printf("EEX: 0x%08X \n",registros[REGEEX]);
+    printf("EFX: 0x%08X \n",registros[REGEFX]);
+    //para verlos juntos
+    printf("SP: 0x%08X \n",registros[REGSP]);
+    printf("IP: 0x%08X \n",registros[REGIP]);
 }
 
-//venían en big-endian?? asumo que sí
+
 void cargarRegistrosVMI(const uint8_t *bytes, Registros registros) {
     for (int i = 0; i < CANT_REGISTROS; i++) {
         registros[i] = bytesAUint32BE(&bytes[i*4]);

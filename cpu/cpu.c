@@ -50,7 +50,7 @@ Instruccion buscarInstruccion(tabla_segmentos tablaSegmentos, Memoria memoria, R
     return instr;
 }
 
-static dirLogica calcularDirLogica(uint32_t regValor, int16_t desplazamiento) {
+dirLogica calcularDirLogica(uint32_t regValor, int16_t desplazamiento) {
     if (regValor == 0xFFFFFFFF) {
         /// Registro de segmento inexistente o direccion nula (-1)
         reportarError(ERROR_FALLO_DE_SEGMENTO);

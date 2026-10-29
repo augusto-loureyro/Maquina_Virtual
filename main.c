@@ -7,6 +7,30 @@
 #include "registros.h"
 #include "cpu.h"
 
+//pasar a memoria¿
+void cargarPilaSubrutinaPrincipal(Memoria memoria, tabla_segmentos tabla, Registros registros, uint32_t argc, uint32_t argv) {
+    /// Stack overflow si no entran los 12 bytes (el offset de SP es relativo al SS)
+    if ((registros[REGSP] & 0xFFFF) < 12) {
+        reportarError(ERROR_STACK_OVERFLOW);
+    }
+    registros[REGSP] = calcularDirLogica(registros[REGSP], -12);
+
+    /// Direccion fisica del tope de la pila 
+    uint32_t dirFisica = traducir(registros[REGSP], tabla, registros, 12, 0);//(0:sin tocar LAR/MAR)
+
+    /// Tope: retorno (-1); luego argc; luego argv. Big endian
+    uint32_t valores[3] = { 0xFFFFFFFF, argc, argv };
+    for (int i = 0; i < 3; i++) {
+        for (int k = 0; k < 4; k++) {
+            memoria[dirFisica + 4 * i + k] = (uint8_t)((valores[i] >> (24 - 8 * k)) & 0xFF);
+        }
+    }
+
+    for (int i = 0; i < 12; i++) 
+        printf("%02X ", memoria[dirFisica + i]);
+    printf("\n\n\n");
+}
+
 int main(int argc, char *argv[]) {
     ConfiguracionMV config;
     tabla_segmentos tablaSegmentos;
@@ -70,9 +94,10 @@ int main(int argc, char *argv[]) {
 
             /// Inicializar registros V2 (CS, DS, ES, SS, KS, PS, SP, IP)
             inicializarRegistrosV2(registros, tablaSegmentos, &config);
-
+            uint32_t argc,argv;
             /// Cargar en memoria el Param Segment si existe (-p)
-            cargarParamSegment(&config, memoria, tablaSegmentos, registros);
+            cargarParamSegment(&config, memoria, tablaSegmentos, registros,&argv,&argc);
+            cargarPilaSubrutinaPrincipal(memoria, tablaSegmentos, registros, argc, argv);        
 
             /// Cargar el Code Segment y el Const Segment
             cargarMemoriaV2(config.archVMX, memoria, tamanioRAM, tablaSegmentos, registros, &config.header);
@@ -95,6 +120,7 @@ int main(int argc, char *argv[]) {
 
     /// 6. Ejecutar el ciclo de instruccion (común a todos los casos)
     ejecutarPrograma(tablaSegmentos, memoria, registros, config.flagD); //por ahora solo config.flagD
+    mostrarRegistros(registros);
 
     /// 7. Liberar recursos antes de salir
     liberarMemoria(&memoria);

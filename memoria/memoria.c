@@ -99,15 +99,23 @@ void cargarMemoriaV2(const char *nombreArchivo, Memoria memoria, uint32_t tamano
     }
 }
 
-void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla_segmentos tablaSegmentos, const Registros registros) {
+/* se retornan argc y dir lógica de argv. 
+    cfg->flagp==0
+     *argv=0xFFFFFFFF, *argc=0;
+    else 
+     *argv=offsetactual (el último antes de cargar el propio argv),*argc=1+cfg->cantParams; 
+*/
+void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla_segmentos tablaSegmentos, const Registros registros, uint32_t *argv,uint32_t *argc) {
+    *argv=0xFFFFFFFF;
+    *argc=0;
     if (registros[REGPS] == 0xFFFFFFFF || !cfg->flagP || cfg->archVMX == NULL) {
         return;
     }else{
         int segParam = (int)(registros[REGPS] >> 16);
         uint32_t baseParam = obtenerBaseSegmento(tablaSegmentos, segParam);
 
-        int argc = 1 + cfg->cantParams;
-        uint16_t *offsets = (uint16_t *)malloc(argc * sizeof(uint16_t));
+        *argc = 1 + cfg->cantParams;
+        uint16_t *offsets = (uint16_t *)malloc(*argc * sizeof(uint16_t));
 
         if (offsets == NULL) {
             reportarError(ERROR_MEMORIA_INSUFICIENTE);
@@ -131,11 +139,12 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla
                 }
                 offsetActual += (uint32_t)(lenP + 1);
             }
+            *argv=registros[REGPS] + offsetActual; //se supone que REGPS==0
 
             /// Arreglo argv: punteros de 4 bytes en formato big-endian
             /// 16 bits mas significativos = numero de segmento de Param (0x0000)
             /// 16 bits menos significativos = offset del string dentro de Param Segment
-            for (int i = 0; i < argc; i++) {
+            for (int i = 0; i <*argc; i++) {
                 uint32_t ptrAddr = baseParam + offsetActual;
                 memoria[ptrAddr + 0] = 0x00;
                 memoria[ptrAddr + 1] = 0x00;
