@@ -32,8 +32,8 @@ uint32_t leerValorOperando(Operando operando, tabla_segmentos tablaSegmentos, Me
 void escribirValorOperando(Operando operando, uint32_t valor, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
 int hayMasInstrucciones(tabla_segmentos tablaSegmentos, Registros registros);
 void saltarA(uint32_t desplazamiento, Registros registros);
-void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
-void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, int flagD);
+void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg, int *breakpoint);
+void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg);
 uint32_t LDH(uint32_t valorBase, uint16_t parteAlta);
 uint32_t LDL(uint32_t valorBase, uint16_t parteBaja);
 dirLogica calcularDirLogica(uint32_t regValor, int16_t desplazamiento);

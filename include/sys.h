@@ -8,8 +8,12 @@
 #include "traductor.h"
 
 // Códigos de llamadas al sistema
-#define SYS_READ   0x1
-#define SYS_WRITE  0x2
+#define SYS_CLEAR_SCREEN 0x0
+#define SYS_READ         0x1
+#define SYS_WRITE        0x2
+#define SYS_STRING_READ  0x3
+#define SYS_STRING_WRITE 0x4
+#define SYS_BREAKPOINT   0xF
 
 // Modos de interpretación / salida (máscaras de bits)
 #define MODO_DEC   0x01
@@ -23,12 +27,12 @@ typedef struct {
     dirLogica dirL;     /** Dirección lógica inicial (EDX) */
     dirFisica dirF;     /** Dirección física inicial traducida */
     uint32_t modo;      /** Modo de lectura/escritura (EAX) */
-    uint32_t cant;      /** Cantidad de valores (ECX bajo) */
-    uint32_t tamBytes;  /** Tamaño de cada valor en bytes (ECX alto: 1..4) */
+    uint32_t cant;      /** Cantidad de valores (ECX bajo / ECX) */
+    uint32_t tamBytes;  /** Tamaño de cada valor en bytes (ECX alto: 1..4 / 1) */
 } ParamSys;
 
 
-void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros);
+void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros, ConfiguracionMV *cfg, int *breakpoint);
 
 void sysWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros);
 void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros);

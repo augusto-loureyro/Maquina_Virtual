@@ -7,24 +7,37 @@
 #include "traductor.h"
 #include "errores.h"
 
-int prepararSys(ParamSys *paramSys, tabla_segmentos tablaSegmentos, Registros registros) {
+int prepararSys(ParamSys *paramSys, uint32_t tipoLlamada, tabla_segmentos tablaSegmentos, Registros registros) {
     uint32_t ecx = registros[REGECX];
 
-    paramSys->dirL     = registros[REGEDX];
-    paramSys->modo     = registros[REGEAX];
-    paramSys->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
-    paramSys->cant     = ecx & 0xFFFF;     // 2 bytes menos significativos: cantidad de elementos
+    paramSys->dirL = registros[REGEDX];
+    paramSys->cant = 0;
 
-    if (paramSys->tamBytes < 1 || paramSys->tamBytes > 4) {
-        reportarError(ERROR_TAMANIO_SYS);
+    switch (tipoLlamada) {
+        case SYS_READ:
+        case SYS_WRITE:
+            paramSys->modo     = registros[REGEAX];
+            paramSys->cant     = ecx & 0xFFFF;     // 2 bytes menos significativos: cantidad de elementos
+            paramSys->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
+            break;
+        case SYS_STRING_READ:
+            paramSys->cant = ecx;
+        case SYS_STRING_WRITE:
+            paramSys->tamBytes = 1;
+            break;
     }
 
-    if (paramSys->cant == 0) {
+    if (paramSys->cant == 0 && tipoLlamada != SYS_STRING_WRITE)
         return 0; // Nada que transferir
-    }
 
-    // Valida que todo el bloque quepa en el segmento correspondiente
-    paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, paramSys->tamBytes * paramSys->cant, 1);
+    if (paramSys->tamBytes < 1 || paramSys->tamBytes > 4)
+        reportarError(ERROR_TAMANIO_SYS);
+
+    if (tipoLlamada == SYS_STRING_WRITE || (tipoLlamada == SYS_STRING_READ && ecx == -1))
+        paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, 0, 0);
+    else
+        paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, paramSys->tamBytes * paramSys->cant, 1);
+
     return 1;
 }
 
@@ -49,12 +62,26 @@ void sysWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmento
     }
 }
 
+void sysStringWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+    dirLogica dirLog = paramSys->dirL;
+    dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
+    uint8_t valor = leerDeMemoria(memoria, dirFis, 1, registros);
+
+    printf("[%04X]: ", (unsigned)dirFis);
+
+    while (valor != '\0') {
+        putchar(valor);
+        dirLog++;
+        dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
+        valor = leerDeMemoria(memoria, dirFis, 1, registros);
+    }
+}
+
 void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
     uint32_t mascara = mascaraBytes(paramSys->tamBytes);
 
-    if (!modoLecturaValido(paramSys->modo)) {
+    if (!modoLecturaValido(paramSys->modo))
         reportarError(ERROR_MODO_SYS);
-    }
 
     for (uint32_t i = 0; i < paramSys->cant; i++) {
         dirLogica dirLog = paramSys->dirL + i * paramSys->tamBytes;
@@ -73,22 +100,105 @@ void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos
     }
 }
 
-void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+void sysStringRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
+    char linea[64];
+    uint32_t limite = paramSys->cant == -1 ? 64 : paramSys->cant;
+    dirLogica dirLog = paramSys->dirL;
+    dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
+
+    printf("[%04X]: ", (unsigned)dirFis);
+    fflush(stdout);
+
+    if (!leerLinea(linea, sizeof(linea)))
+        reportarError(ERROR_ENTRADA_SYS);
+
+    uint32_t i = 0;
+
+    while (i < limite && linea[i] != '\0') {
+        escribirEnMemoria(memoria, dirFis, linea[i], 1, registros);
+        i++;
+        dirLog++;
+        dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
+    }
+
+    escribirEnMemoria(memoria, dirFis, '\0', 1, registros);
+}
+
+char sysBreakpoint(char *nombreArch, uint16_t mem_kib, Registros registros, tabla_segmentos tablaSegmentos, Memoria memoria) {
+    FILE *arch = fopen(nombreArch, "wb");
+
+    if (arch == NULL)
+        reportarError(ERROR_ARCHIVO_NO_ENCONTRADO);
+
+    // Generar imagen
+    // Header
+    fwrite("VMI26", 1, 5, arch);
+    uint8_t version = 1;
+    fwrite(&version, 1, 1, arch);
+    fwrite(&mem_kib, 2, 1, arch);
+
+    // Registros
+    fwrite(registros, sizeof(registros[0]), CANT_REGISTROS, arch);
+    // Tabla segmentos
+    fwrite(tablaSegmentos, sizeof(tablaSegmentos[0]), CANT_SEG, arch);
+    // Memoria principal
+    fwrite(memoria, sizeof(memoria[0]), mem_kib * 1024, arch);
+
+    fclose(arch);
+
+    // Pausa y modo debug
+    int input, c;
+    do
+    {
+        input = getchar();
+    } while (input != 'g' && input != 'q' && input != '\n' && input != EOF);
+
+    if (input != '\n' && input != EOF)
+        while ((c = getchar()) != '\n' && c != EOF);
+
+    return input == EOF ? '.' : (char)input;
+}
+
+void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros, ConfiguracionMV *cfg, int *breakpoint) {
     ParamSys paramSys;
 
-    if (tipoLlamada != SYS_READ && tipoLlamada != SYS_WRITE) {
-        reportarError(ERROR_SYS_INVALIDA);
-    }
-
-    if (!prepararSys(&paramSys, tablaSegmentos, registros)) {
-        return;
-    }
-
-    if (tipoLlamada == SYS_WRITE) {
-        sysWrite(&paramSys, memoria, tablaSegmentos, registros);
-    } else {
-        if(tipoLlamada == SYS_WRITE)
-            sysRead(&paramSys, memoria, tablaSegmentos, registros);
+    switch(tipoLlamada) {
+        case SYS_READ:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysRead(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_WRITE:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysWrite(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_STRING_READ:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysStringRead(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_STRING_WRITE:
+            if (prepararSys(&paramSys, tipoLlamada, tablaSegmentos, registros))
+                sysStringWrite(&paramSys, memoria, tablaSegmentos, registros);
+            break;
+        case SYS_CLEAR_SCREEN:
+            printf("\033[2J\033[H"); // \033[2J borra toda la pantalla, \033[H mueve el cursor a la posicion 0,0
+            fflush(stdout);
+            break;
+        case SYS_BREAKPOINT:
+            if (cfg->archVMI == NULL)
+                return; 
+            char input = sysBreakpoint(cfg->archVMI, (uint16_t)cfg->mem_kib, registros, tablaSegmentos, memoria);
+            switch(input) {
+                case 'q':
+                    exit(0);
+                    break;
+                case '\n':
+                    *breakpoint = 1;
+                    break;
+                default:
+                    *breakpoint = 0;
+                    break;
+            }
+            break;
     }
 }
 

@@ -34,9 +34,6 @@ void reportarError(TipoError tipo) {
         case ERROR_MODO_SYS:
             mensaje = "Modo de syscall invalido";
             break;
-        case ERROR_SYS_INVALIDA:
-            mensaje = "Llamada al sistema invalida";
-            break;
         case ERROR_ENTRADA_SYS:
             mensaje = "Entrada de syscall invalida o fin de archivo (EOF)";
             break;

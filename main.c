@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     }
 
     /// 6. Ejecutar el ciclo de instruccion (común a todos los casos)
-    ejecutarPrograma(tablaSegmentos, memoria, registros, config.flagD); //por ahora solo config.flagD
+    ejecutarPrograma(tablaSegmentos, memoria, registros, &config);
     mostrarRegistros(registros);
 
     /// 7. Liberar recursos antes de salir
