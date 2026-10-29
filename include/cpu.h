@@ -36,5 +36,5 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memo
 void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg);
 uint32_t LDH(uint32_t valorBase, uint16_t parteAlta);
 uint32_t LDL(uint32_t valorBase, uint16_t parteBaja);
-
+dirLogica calcularDirLogica(uint32_t regValor, int16_t desplazamiento);
 #endif // CPU_H

@@ -51,4 +51,6 @@ uint16_t calcularTamanioParamSegment(const ConfiguracionMV *cfg);
  */
 void mostrarTablaSegmentos(const tabla_segmentos tablaSegmentos);
 
+void cargarTablaSegmentosVMI(const uint8_t *bytes, tabla_segmentos tabla);
+
 #endif // TABLASEGMENTOS_H

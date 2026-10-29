@@ -30,9 +30,10 @@ void cargarMemoriaV2(const char *nombreArchivo, Memoria memoria, uint32_t tamano
  * Carga el Param Segment para MV2 (Version 2).
  * Obtiene la base fisica del segmento desde la tabla de descriptores a traves del registro PS.
  */
-void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla_segmentos tablaSegmentos, const Registros registros);
+void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla_segmentos tablaSegmentos, const Registros registros, uint32_t *argv,uint32_t *argc);
 
 uint32_t leerDeMemoria(Memoria memoria, uint32_t dirFisica, int cantidadBytes, Registros registros);
 void escribirEnMemoria(Memoria memoria, uint32_t dirFisica, uint32_t valor, int cantidadBytes, Registros registros);
 
+void cargarMemoriaVMI(const char *nombreArchivo, Memoria memoria, uint32_t tamanioRAM);
 #endif // MEMORIA_H
