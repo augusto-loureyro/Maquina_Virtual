@@ -22,9 +22,13 @@ int prepararSys(ParamSys *paramSys, uint32_t tipoLlamada, tabla_segmentos tablaS
             paramSys->tamBytes = ecx >> 16;        // 2 bytes mas significativos: tamaño de cada elemento (1..4)
             break;
         case SYS_STRING_READ:
-            paramSys->cant = ecx;
+            paramSys->cant     = ecx;
+            paramSys->tamBytes = 1;
+            break;
         case SYS_STRING_WRITE:
             paramSys->tamBytes = 1;
+            break;
+        default:
             break;
     }
 
@@ -34,7 +38,7 @@ int prepararSys(ParamSys *paramSys, uint32_t tipoLlamada, tabla_segmentos tablaS
     if (paramSys->tamBytes < 1 || paramSys->tamBytes > 4)
         reportarError(ERROR_TAMANIO_SYS);
 
-    if (tipoLlamada == SYS_STRING_WRITE || (tipoLlamada == SYS_STRING_READ && ecx == -1))
+    if (tipoLlamada == SYS_STRING_WRITE || (tipoLlamada == SYS_STRING_READ && ecx == 0xFFFFFFFF))
         paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, 0, 0);
     else
         paramSys->dirF = traducir(paramSys->dirL, tablaSegmentos, registros, paramSys->tamBytes * paramSys->cant, 1);
@@ -66,16 +70,15 @@ void sysWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmento
 void sysStringWrite(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
     dirLogica dirLog = paramSys->dirL;
     dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
-    uint8_t valor = leerDeMemoria(memoria, dirFis, 1, registros);
-
-    printf("[%04X]: ", (unsigned)dirFis);
+    uint8_t valor = (uint8_t)leerDeMemoria(memoria, dirFis, 1, registros);
 
     while (valor != '\0') {
         putchar(valor);
         dirLog++;
         dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
-        valor = leerDeMemoria(memoria, dirFis, 1, registros);
+        valor = (uint8_t)leerDeMemoria(memoria, dirFis, 1, registros);
     }
+    fflush(stdout);
 }
 
 void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
@@ -102,26 +105,21 @@ void sysRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos
 }
 
 void sysStringRead(ParamSys *paramSys, Memoria memoria, tabla_segmentos tablaSegmentos, Registros registros) {
-    char linea[64];
-    uint32_t limite = paramSys->cant == -1 ? 64 : paramSys->cant;
+    uint32_t limite = (paramSys->cant == 0xFFFFFFFF) ? UINT32_MAX : paramSys->cant;
     dirLogica dirLog = paramSys->dirL;
-    dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
-
-    printf("[%04X]: ", (unsigned)dirFis);
-    fflush(stdout);
-
-    if (!leerLinea(linea, sizeof(linea)))
-        reportarError(ERROR_ENTRADA_SYS);
-
     uint32_t i = 0;
+    int c;
 
-    while (i < limite && linea[i] != '\0' && linea[i] != '\n') {
-        escribirEnMemoria(memoria, dirFis, linea[i], 1, registros);
-        i++;
-        dirLog++;
-        dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
+    while ((c = getchar()) != '\n' && c != EOF) {
+        if (i < limite) {
+            dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
+            escribirEnMemoria(memoria, dirFis, (uint8_t)c, 1, registros);
+            dirLog++;
+            i++;
+        }
     }
 
+    dirFisica dirFis = traducir(dirLog, tablaSegmentos, registros, 1, 1);
     escribirEnMemoria(memoria, dirFis, '\0', 1, registros);
 }
 
@@ -132,8 +130,9 @@ char sysBreakpoint(char *nombreArch, uint16_t mem_kib, Registros registros, tabl
     while (1) {
         if (!leerLinea(linea, sizeof(linea)))
             return '.';
-        if (linea[0] == 'g' || linea[0] == 'q' || linea[0] == '\n')
-            return linea[0];
+        char c = (char)tolower((unsigned char)linea[0]);
+        if (c == 'g' || c == 'q' || linea[0] == '\n')
+            return (c == 'g' || c == 'q') ? c : '\n';
     }
 }
 
@@ -158,8 +157,12 @@ void llamadaSistema(uint32_t tipoLlamada, Memoria memoria, tabla_segmentos tabla
                 sysStringWrite(&paramSys, memoria, tablaSegmentos, registros);
             break;
         case SYS_CLEAR_SCREEN:
-            printf("\033[2J\033[H"); // \033[2J borra toda la pantalla, \033[H mueve el cursor a la posicion 0,0
+#ifdef _WIN32
+            system("cls");
+#else
+            printf("\033[2J\033[H");
             fflush(stdout);
+#endif
             break;
         case SYS_BREAKPOINT:
             if (cfg->archVMI == NULL)

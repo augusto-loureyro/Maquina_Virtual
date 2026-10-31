@@ -144,7 +144,7 @@ void cargarParamSegment(const ConfiguracionMV *cfg, Memoria memoria, const tabla
             /// Arreglo argv: punteros de 4 bytes en formato big-endian
             /// 16 bits mas significativos = numero de segmento de Param (0x0000)
             /// 16 bits menos significativos = offset del string dentro de Param Segment
-            for (int i = 0; i <*argc; i++) {
+            for (uint32_t i = 0; i < *argc; i++) {
                 uint32_t ptrAddr = baseParam + offsetActual;
                 memoria[ptrAddr + 0] = 0x00;
                 memoria[ptrAddr + 1] = 0x00;

@@ -397,14 +397,14 @@ void ejecutarInstruccion(Instruccion instr, tabla_segmentos tablaSegmentos, Memo
 void ejecutarPrograma(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros, ConfiguracionMV *cfg) {
     int breakpoint = 0;
     if (cfg->flagD)
-        mostrarDisassembly(memoria, tablaSegmentos, registros); //se muestra el disassembler antes de la ejecución, que es lo que hace el traductor (y sino no se muestra el >)
+        mostrarDisassembly(memoria, tablaSegmentos, registros, cfg); //se muestra el disassembler antes de la ejecución, que es lo que hace el traductor (y sino no se muestra el >)
 
     while (hayMasInstrucciones(tablaSegmentos, registros)) {
         Instruccion instr = buscarInstruccion(tablaSegmentos, memoria, registros);
 
         ejecutarInstruccion(instr, tablaSegmentos, memoria, registros, cfg, &breakpoint);
 
-        if(breakpoint && (instr.opcode != OPCODE_SYS || leerValorOperando(instr.operandoA, tablaSegmentos, memoria, registros) != SYS_BREAKPOINT)) // evita rehacer el mismo breakpoint
+        if (breakpoint && hayMasInstrucciones(tablaSegmentos, registros) && (instr.opcode != OPCODE_SYS || leerValorOperando(instr.operandoA, tablaSegmentos, memoria, registros) != SYS_BREAKPOINT))
             llamadaSistema(SYS_BREAKPOINT, memoria, tablaSegmentos, registros, cfg, &breakpoint);
     }
 }

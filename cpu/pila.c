@@ -1,6 +1,7 @@
 #include "pila.h"
 #include "errores.h"
 #include "traductor.h"
+#include "cpu.h"
 
 void push(uint32_t valor, tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros) {
     int segSS = (int)(registros[REGSS] >> 16);
@@ -28,7 +29,6 @@ void push(uint32_t valor, tabla_segmentos tablaSegmentos, Memoria memoria, Regis
     dirFisica dirFisicaDestino = traducir(registros[REGSP], tablaSegmentos, registros, 4, 1);
     escribirEnMemoria(memoria, dirFisicaDestino, valor, 4, registros);
 }
-
 
 uint32_t pop(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros) {
     int segSS = (int)(registros[REGSS] >> 16);
@@ -61,3 +61,29 @@ uint32_t pop(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registro
     return valor;
 }
 
+void inicializarPilaSubrutinaPrincipal(Memoria memoria, tabla_segmentos tabla, Registros registros, uint32_t argc, uint32_t argv) {
+    int segSS = (int)(registros[REGSS] >> 16);
+
+    if (registros[REGSS] == 0xFFFFFFFF || !esSegmentoValido(tabla, segSS)) {
+        reportarError(ERROR_STACK_OVERFLOW);
+    }else{
+        /// Stack overflow si no entran los 12 bytes
+        if ((registros[REGSP] & 0xFFFF) < 12) {
+            reportarError(ERROR_STACK_OVERFLOW);
+        }else{
+            registros[REGSP] = calcularDirLogica(registros[REGSP], -12);
+
+            /// Direccion fisica del tope de la pila (sin alterar LAR/MAR durante el arranque)
+            dirFisica dirFisicaTope = traducir(registros[REGSP], tabla, registros, 12, 0);
+
+            /// [SP] = RET (-1), [SP+4] = argc, [SP+8] = argv en big-endian
+            uint32_t valores[3] = { 0xFFFFFFFF, argc, argv };
+            for (int i = 0; i < 3; i++) {
+                for (int k = 0; k < 4; k++) {
+                    memoria[dirFisicaTope + 4 * i + k] = (uint8_t)((valores[i] >> (24 - 8 * k)) & 0xFF);
+                }
+            }
+            
+        }
+    }
+}
