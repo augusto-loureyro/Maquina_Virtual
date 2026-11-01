@@ -31,4 +31,14 @@ void push(uint32_t valor, tabla_segmentos tablaSegmentos, Memoria memoria, Regis
  */
 uint32_t pop(tabla_segmentos tablaSegmentos, Memoria memoria, Registros registros);
 
+/**
+ * Inicializa la pila de la subrutina principal (main):
+ * SP se decrementa en 12 bytes y se cargan:
+ *   [SP]   -> direccion de retorno (-1 / 0xFFFFFFFF)
+ *   [SP+4] -> argc
+ *   [SP+8] -> argv (puntero al arreglo de argumentos o 0xFFFFFFFF)
+ * En caso de no haber espacio suficiente (menos de 12 bytes), reporta ERROR_STACK_OVERFLOW.
+ */
+void inicializarPilaSubrutinaPrincipal(Memoria memoria, tabla_segmentos tabla, Registros registros, uint32_t argc, uint32_t argv);
+
 #endif // PILA_H

@@ -7,10 +7,10 @@
 #include "opcode.h"
 #include "traductor.h"
 
-static void formatearOperando(Operando operando, char *buf, size_t tam) {
+static void formatearOperando(Operando operando, char *buf, size_t tam, int esV2) {
     switch (operando.tipo) {
         case TIPO_REGISTRO:
-            if (operando.codigoRegistro >= REGEAX && operando.codigoRegistro <= REGEFX) {
+            if (esV2 && operando.codigoRegistro >= REGEAX && operando.codigoRegistro <= REGEFX) {
                 char regChar = (char)('A' + (operando.codigoRegistro - REGEAX));
                 switch (operando.sector) {
                     case SECTOR_COMPLETO:
@@ -40,12 +40,14 @@ static void formatearOperando(Operando operando, char *buf, size_t tam) {
 
         case TIPO_MEMORIA: {
             const char *pref = "";
-            if (operando.tamanoMemoria == 1) {
-                pref = "b";
-            } else if (operando.tamanoMemoria == 2) {
-                pref = "w";
-            } else if (operando.tamanoMemoria == 4 && operando.modifMemoria == MODIF_MEM_LONG) {
-                pref = "l";
+            if (esV2) {
+                if (operando.tamanoMemoria == 1) {
+                    pref = "b";
+                } else if (operando.tamanoMemoria == 2) {
+                    pref = "w";
+                } else if (operando.tamanoMemoria == 4 && operando.modifMemoria == MODIF_MEM_LONG) {
+                    pref = "l";
+                }
             }
 
             if (operando.desplazamiento >= 0)
@@ -61,9 +63,10 @@ static void formatearOperando(Operando operando, char *buf, size_t tam) {
     }
 }
 
-void mostrarInstruccion(Instruccion instr, Memoria memoria, int esEntryPoint) {
-    ///
-    putchar(esEntryPoint ? '>' : ' ');
+void mostrarInstruccion(Instruccion instr, Memoria memoria, int esEntryPoint, int esV2) {
+    if (esV2) {
+        putchar(esEntryPoint ? '>' : ' ');
+    }
     /// 1. Direccion fisica de inicio: [0000]
     printf("[%04X] ", (unsigned)instr.dirInicio);
 
@@ -90,18 +93,18 @@ void mostrarInstruccion(Instruccion instr, Memoria memoria, int esEntryPoint) {
 
     switch (instr.categoria) {
         case DOS_OPERANDOS:
-            formatearOperando(instr.operandoA, opA, sizeof(opA));
-            formatearOperando(instr.operandoB, opB, sizeof(opB));
+            formatearOperando(instr.operandoA, opA, sizeof(opA), esV2);
+            formatearOperando(instr.operandoB, opB, sizeof(opB), esV2);
             printf(" %s, %s", opA, opB);
             break;
 
         case UN_OPERANDO:
-            formatearOperando(instr.operandoA, opA, sizeof(opA));
+            formatearOperando(instr.operandoA, opA, sizeof(opA), esV2);
             printf(" %s", opA);
             break;
 
         case SIN_OPERANDOS:
-            /// STOP no lleva operandos
+            /// STOP o RET no llevan operandos
             break;
     }
 
@@ -117,6 +120,9 @@ void mostrarConstantes(Memoria memoria, tabla_segmentos tabla, Registros registr
         return;
 
     int seg = (int)(registros[REGKS] >> 16);
+    if (!esSegmentoValido(tabla, seg))
+        return;
+
     uint32_t dir = obtenerBaseSegmento(tabla, seg);
     uint32_t fin = dir + obtenerTamanioSegmento(tabla, seg);
 
@@ -126,7 +132,7 @@ void mostrarConstantes(Memoria memoria, tabla_segmentos tabla, Registros registr
             i++;
         uint32_t total = (i - dir) + (i < fin ? 1 : 0);      /// bytes de la cadena, con el '\0'
 
-        printf("[%04X] ", (unsigned)dir);
+        printf(" [%04X] ", (unsigned)dir);
         uint32_t mostrar = (total > 7) ? 6 : total;
         int cols = 0;
         for (uint32_t k = 0; k < mostrar; k++) {
@@ -149,22 +155,26 @@ void mostrarConstantes(Memoria memoria, tabla_segmentos tabla, Registros registr
     }
 }
 
-/** Desensamblado completo: constantes y luego todo el Code Segment, con '>' en el IP inicial */
-void mostrarDisassembly(Memoria memoria, tabla_segmentos tabla, Registros registros) {
-    Registros copia;
-    memcpy(copia, registros, CANT_REGISTROS * sizeof(uint32_t));   /// recorrer sin tocar el IP real
+/** Desensamblado completo: constantes y luego todo el Code Segment */
+void mostrarDisassembly(Memoria memoria, tabla_segmentos tabla, Registros registros, const ConfiguracionMV *cfg) {
+    int esV2 = (cfg == NULL || cfg->header.version != 1);
 
-    mostrarConstantes(memoria, tabla, registros);
+    if (esV2) {
+        mostrarConstantes(memoria, tabla, registros);
+    }
 
     if (registros[REGCS] == 0xFFFFFFFF)
         return;
+
+    Registros copia;
+    memcpy(copia, registros, CANT_REGISTROS * sizeof(uint32_t));   /// recorrer sin tocar el IP real
 
     uint32_t dirEntrada = traducir(registros[REGIP], tabla, registros, 0, 0);
     copia[REGIP] = registros[REGCS];                               /// empezar desde el comienzo del Code Segment
 
     while (hayMasInstrucciones(tabla, copia)) {
         Instruccion instr = buscarInstruccion(tabla, memoria, copia);
-        mostrarInstruccion(instr, memoria, instr.dirInicio == dirEntrada);
+        mostrarInstruccion(instr, memoria, instr.dirInicio == dirEntrada, esV2);
     }
 }
 
