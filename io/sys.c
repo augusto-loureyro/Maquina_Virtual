@@ -131,8 +131,8 @@ char sysBreakpoint(char *nombreArch, uint16_t mem_kib, Registros registros, tabl
         if (!leerLinea(linea, sizeof(linea)))
             return '.';
         char c = (char)tolower((unsigned char)linea[0]);
-        if (c == 'g' || c == 'q' || linea[0] == '\n')
-            return (c == 'g' || c == 'q') ? c : '\n';
+        if (c == 'g' || c == 'q' || c == '\n')
+            return c;
     }
 }
 
